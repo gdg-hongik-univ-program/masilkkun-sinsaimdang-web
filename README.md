@@ -2,10 +2,10 @@
 
 프로젝트 생성 과정
 
-npm install -g pnpm 
+npm install -g pnpm
 
-pnpm create vite . 
---template react 
+pnpm create vite .
+--template react
 --Javascript
 
 라이브러리
@@ -14,3 +14,4 @@ error lens
 prettier
 eslint
 @vitejs
+..
