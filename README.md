@@ -11,7 +11,6 @@ pnpm create vite .
 라이브러리
 
 error lens
-tailwindcss
 prettier
 eslint
 @vitejs
