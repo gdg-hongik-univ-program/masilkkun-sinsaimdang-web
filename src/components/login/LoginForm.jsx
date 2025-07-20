@@ -2,7 +2,7 @@ import logo from "../../assets/img/Logo.png";
 import "./LoginForm.css";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import axios from "axios";
+import baseApi from "../../api/baseApi";
 
 const user = {
   id: "jswun123",
@@ -15,36 +15,40 @@ const LoginForm = () => {
   const [isChecked, setIsChecked] = useState(false);
   const nav = useNavigate();
 
+  const onChangeCheckbox = (e) => {
+    setIsChecked(e.target.checked);
+  };
+
+  const onIdChange = (e) => {
+    setId(e.target.value);
+  };
+
+  const onPasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
   const handleLogin = async (e) => {
     e.preventDefault();
-    const option = {
-      url: "주소",
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json; charset=UTF-8",
-      },
-      data: {
-        id: id,
-        password: password,
-      },
-    };
+
+    console.log("로그인 작동중"); // 버튼 작동 확인
     try {
-      const reponse = await axios(option);
-      console.log(Response.data);
+      const response = await baseApi.post("/api/auth/signin", {
+        id,
+        password,
+      }); // 요청 보냄
+      console.log("로그인 성공", response.data);
+
+      if (isChecked) {
+        localStorage.setItem("token", response.data.token);
+        // 로그인 유지 체크 : 창 닫아도 로그인 유지
+      } else {
+        sessionStorage.setItem("token", response.data.token);
+        // 로그인 유지 체크 X : 창 닫으면 로그아웃
+      }
+      nav("/home");
     } catch (error) {
       console.error("로그인 실패:", error);
       alert("로그인에 실패했습니다.");
     }
-  };
-  const onChangeCheckbox = (e) => {
-    setIsChecked(e.target.checked);
-  };
-  const onIdChange = (e) => {
-    setId(e.target.value);
-  };
-  const onPasswordChange = (e) => {
-    setPassword(e.target.value);
   };
 
   return (
@@ -70,7 +74,9 @@ const LoginForm = () => {
                 placeholder="비밀번호"
               />
             </div>
-            <button className="button">로그인</button>
+            <button type="submit" className="button">
+              로그인
+            </button>
           </div>
           <div className="login-option">
             <label className="checkbox-label">
@@ -81,8 +87,12 @@ const LoginForm = () => {
               />
               로그인 유지
             </label>
-            <span>아이디/비밀번호 찾기</span>
-            <span>회원가입</span>
+            <Link to="/Find-id" className="plane-link">
+              아이디/비밀번호 찾기
+            </Link>
+            <Link to="/Register" className="plane-link">
+              회원가입
+            </Link>
           </div>
         </div>
       </form>
