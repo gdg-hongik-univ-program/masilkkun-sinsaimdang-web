@@ -2,10 +2,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 100%; /* ✅ 부모(.content-wrapper)에 맞게 제한 */
+  width: 100%;
   height: 100%;
   box-sizing: border-box;
-  overflow-x: hidden; /* ✅ 가로 넘침 방지 */
+  overflow-x: hidden;
 }
 
 .top-bar {

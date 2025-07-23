@@ -1,7 +1,6 @@
-// PostListPage.jsx (더 이상 전체 페이지 아님!)
 import React, { useState } from "react";
 import PostList from "../components/post/PostList";
-import "./PostListPage.css"; // 필요한 스타일 유지
+import "./PostListPage.css";
 
 const PostListPage = ({
   region,

@@ -1,4 +1,3 @@
-// pages/MyPage.jsx
 import React from "react";
 
 const MyPage = () => {

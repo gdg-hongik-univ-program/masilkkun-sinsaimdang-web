@@ -1,5 +1,3 @@
-// src/components/post/SortSelector.jsx
-
 import React from "react";
 
 const SortSelector = () => {

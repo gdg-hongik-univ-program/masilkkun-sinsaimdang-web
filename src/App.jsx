@@ -6,7 +6,6 @@ import CertificationPage from "./pages/CertificationPage";
 import ScrapbookPage from "./pages/ScrapbookPage";
 import MyPage from "./pages/MyPage";
 import "./components/layout/Layout.css";
-// 너의 layout 스타일 포함
 
 const App = () => {
   const [activePage, setActivePage] = useState("postlist");

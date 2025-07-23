@@ -58,7 +58,7 @@
   padding: 12px 0; /* ✅ 클릭 영역 넓히기 */
   width: 100%; /* ✅ 전체 너비로 확장 */
   transition: background 0.2s;
-  border-radius: 4px; /* 선택사항: 둥글게 */
+  border-radius: 4px;
 }
 
 .menu-item svg {
