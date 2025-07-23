@@ -1,4 +1,3 @@
-// api/baseApi.js
 import axios from "axios";
 
 const baseApi = axios.create({
