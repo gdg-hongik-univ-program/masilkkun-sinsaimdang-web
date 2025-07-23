@@ -1,84 +1,85 @@
 .post-card {
-  width: 100%;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 24px;
-  position: relative;
+  background-color: white;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
-.post-thumbnails {
+.post-images {
   display: flex;
-  width: 100%;
+}
+
+.post-image {
+  width: 50%;
   height: 180px;
   object-fit: cover;
 }
 
-.thumb-img {
-  width: 50%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.postcard-profile-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  position: absolute;
-  top: 150px;
-  left: 16px;
-  border: 3px solid white;
-  background: white;
-}
-
-.post-content {
-  padding: 56px 16px 16px; /* 프로필 공간 고려 */
-}
-
-.author-info {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 4px;
+.profile-section {
   display: flex;
   align-items: center;
-  gap: 4px;
+  margin-top: 12px;
+  padding: 0 12px;
 }
 
-.dot {
-  font-size: 18px;
-  line-height: 0;
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
 }
 
-.post-title {
-  font-size: 18px;
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
   font-weight: bold;
-  margin-bottom: 8px;
+  margin: 0;
+}
+
+.post-date {
+  font-size: 12px;
+  color: gray;
+  margin: 0;
+}
+
+.post-location {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 8px 12px;
 }
 
 .post-tags {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 12px 8px;
 }
 
 .tag {
-  margin-right: 8px;
+  color: #555;
+  font-size: 13px;
 }
 
 .post-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
+  margin-top: 12px;
+  padding-right: 8px;
 }
-
-.action-btn {
-  border: 1px solid #999;
-  border-radius: 24px;
-  padding: 6px 12px;
-  font-size: 14px;
+.action {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: white;
+  gap: 4px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
 }
