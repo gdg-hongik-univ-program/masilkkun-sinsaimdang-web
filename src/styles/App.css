@@ -1,0 +1,90 @@
+/* App.css */
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f8f8f8;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f7f7f7;
+}
+
+.sidebar {
+  width: 80px;
+  background-color: #2a2a2a;
+  color: white;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  max-width: 460px;
+  background-color: white;
+}
+
+.tabs button {
+  margin-right: 8px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid gray;
+  background: white;
+  cursor: pointer;
+}
+
+.tabs .active {
+  background: black;
+  color: white;
+}
+
+.post-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.post-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-top: 6px;
+}
+/* 모든 요소 여백 제거 + 박스 사이징 통일 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 기본 요소 꽉 채우기 */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}

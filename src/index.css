@@ -1,0 +1,15 @@
+/* ✅ 모든 여백 제거 및 박스 사이징 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}

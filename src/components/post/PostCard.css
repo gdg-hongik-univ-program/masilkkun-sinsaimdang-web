@@ -1,0 +1,90 @@
+.post-card {
+  display: flex;
+  width: 100%; /* ⛔ 현재 너무 넓게 퍼짐 */
+  max-width: 700px; /* ✅ 적당히 제한해보기 (예: 700px) */
+  margin: 16px auto; /* ✅ 가운데 정렬 + 상하 간격 */
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: white;
+  padding: 16px;
+}
+
+.post-thumbnail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 160px;
+  height: 100%;
+}
+
+.thumb-left,
+.thumb-right {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.post-content {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.author-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-title {
+  margin: 8px 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  color: #888;
+}
+
+.tag {
+  color: #666;
+}
+
+.bottom-info {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: #333;
+  margin-top: 8px;
+}
+.icon-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 16px;
+  color: #aaa;
+  transition: color 0.2s ease;
+}
+
+.icon-btn.active {
+  color: hotpink; /* 좋아요 색상 */
+}
+
+.icon-btn.active:nth-child(2) {
+  color: #ff5252; /* 북마크 색상 */
+}
