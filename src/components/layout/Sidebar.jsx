@@ -24,7 +24,14 @@ const Sidebar = ({ setActivePage }) => {
   return (
     <div className="sidebar">
       {/* 로고 */}
-      <div className="logo-box">
+      <div
+        className="logo-box"
+        onClick={() => {
+          setActive("postlist"); // 로컬 메뉴 active 상태도 함께 변경
+          setActivePage("postlist"); // 상위 App에 전달
+        }}
+        style={{ cursor: "pointer" }} // 마우스 커서 변경
+      >
         <img src="/logo2.png" alt="logo2" className="logo-img" />
       </div>
 
