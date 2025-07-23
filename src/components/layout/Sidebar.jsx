@@ -5,7 +5,7 @@ import "./Sidebar.css";
 
 const Sidebar = ({ setActivePage }) => {
   const [user, setUser] = useState(null);
-  const [active, setActive] = useState("작성");
+  const [active, setActive] = useState("create");
 
   useEffect(() => {
     axios
@@ -13,6 +13,13 @@ const Sidebar = ({ setActivePage }) => {
       .then((res) => setUser(res.data))
       .catch((err) => console.error("유저 정보 요청 실패:", err));
   }, []);
+
+  const menuItems = [
+    { key: "create", label: "작성", icon: <FaPen /> },
+    { key: "certification", label: "인증", icon: <FaCheckCircle /> },
+    { key: "scrapbook", label: "스크랩북", icon: <FaBookmark /> },
+    { key: "mypage", label: "MY", icon: <FaUser /> },
+  ];
 
   return (
     <div className="sidebar">
@@ -29,18 +36,13 @@ const Sidebar = ({ setActivePage }) => {
 
       {/* 메뉴 */}
       <ul className="menu">
-        {[
-          { label: "작성", icon: <FaPen /> },
-          { label: "인증", icon: <FaCheckCircle /> },
-          { label: "스크랩북", icon: <FaBookmark /> },
-          { label: "MY", icon: <FaUser /> },
-        ].map((item) => (
+        {menuItems.map((item) => (
           <li
-            key={item.label}
-            className={`menu-item ${active === item.label ? "active" : ""}`}
+            key={item.key}
+            className={`menu-item ${active === item.key ? "active" : ""}`}
             onClick={() => {
-              setActive(item.label); // 로컬 표시
-              setActivePage(item.label); // 부모에 알림
+              setActive(item.key);
+              setActivePage(item.key);
             }}
           >
             {item.icon}
