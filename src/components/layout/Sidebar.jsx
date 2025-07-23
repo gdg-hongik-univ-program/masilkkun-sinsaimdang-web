@@ -37,7 +37,11 @@ const Sidebar = ({ setActivePage }) => {
 
       {/* 프로필 박스 */}
       <div className="profile-box">
-        <img src={user?.profileImage} alt="사진" className="profile-img" />
+        <img
+          src={user?.profileImage}
+          alt="사진"
+          className="sidebar-profile-img"
+        />
         <p className="username">{user?.name}님</p>
       </div>
 
