@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Sidebar from "./components/layout/Sidebar";
@@ -10,6 +10,10 @@ import MyPage from "./pages/MyPage";
 import "./components/layout/Layout.css";
 
 const App = () => {
+  const [region, setRegion] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("여행지");
+  const [sortOrder, setSortOrder] = useState("기본순");
+
   return (
     <div className="layout-container">
       <div className="left-section">
@@ -18,7 +22,19 @@ const App = () => {
         </div>
         <div className="content-wrapper">
           <Routes>
-            <Route path="postlist" element={<PostListPage />} />
+            <Route
+              path="postlist"
+              element={
+                <PostListPage
+                  region={region}
+                  setRegion={setRegion}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  sortOrder={sortOrder}
+                  setSortOrder={setSortOrder}
+                />
+              }
+            />
             <Route path="create" element={<PostCreatePage />} />
             <Route path="certification" element={<CertificationPage />} />
             <Route path="scrapbook" element={<ScrapbookPage />} />
@@ -27,7 +43,7 @@ const App = () => {
           </Routes>
         </div>
       </div>
-      <div className="right-section">{/* 지도 자리*/}</div>
+      <div className="right-section">{/* 지도 자리 */}</div>
     </div>
   );
 };
