@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../assets/Logo.png";
+import logo from "../../assets/Logo.png";
 import "./LoginForm.css";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
