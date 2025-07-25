@@ -35,7 +35,6 @@ const LoginForm = () => {
     // mock 데이터와 비교(api연결할때 지워야할 부분 )
     if (id === user.id && password === user.password) {
       console.log("로그인 성공 (Mock)");
-
       const token = "mock-token-123";
 
       if (isChecked) {

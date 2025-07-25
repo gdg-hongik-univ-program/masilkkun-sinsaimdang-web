@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import PostCard from "./PostCard";
-import baseApi from "../../api/baseApi";
+
 import "./PostList.css";
 
 const PostList = ({ region, category, sortOrder }) => {
@@ -37,6 +36,7 @@ const PostList = ({ region, category, sortOrder }) => {
 
     setPosts(mockData);
   }, []);
+
   // const fetchPosts = async () => {
   //   try {
   //     const res = await baseApi.get("/api/posts", {

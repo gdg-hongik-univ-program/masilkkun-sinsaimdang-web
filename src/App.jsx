@@ -7,6 +7,7 @@ import PostCreatePage from "./pages/PostCreatePage";
 import CertificationPage from "./pages/CertificationPage";
 import ScrapbookPage from "./pages/ScrapbookPage";
 import MyPage from "./pages/MyPage";
+import Mapview from "./components/main/Mapview";
 import "./components/layout/Layout.css";
 
 const App = () => {
@@ -43,7 +44,9 @@ const App = () => {
           </Routes>
         </div>
       </div>
-      <div className="right-section">{/* 지도 자리 */}</div>
+      <div className="right-section">
+        <Mapview />
+      </div>
     </div>
   );
 };

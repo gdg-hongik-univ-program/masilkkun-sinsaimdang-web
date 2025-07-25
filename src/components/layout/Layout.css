@@ -29,6 +29,7 @@
 }
 
 .right-section {
+  display: flex;
   flex: 1;
   background-color: #f9f9f9;
   position: relative;
