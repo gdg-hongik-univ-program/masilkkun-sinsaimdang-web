@@ -1,9 +1,20 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import LoginForm from "./components/LoginForm";
+import Register from "./pages/Register";
 import App from "./App";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LoginForm />} />
+        <Route path="/app/*" element={<App />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </BrowserRouter>
+  </StrictMode>
 );

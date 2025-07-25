@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaPen, FaCheckCircle, FaBookmark, FaUser } from "react-icons/fa";
 import "./Sidebar.css";
 
-const Sidebar = ({ setActivePage }) => {
+const Sidebar = () => {
   const [user, setUser] = useState(null);
-  const [active, setActive] = useState("create");
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     axios
@@ -15,10 +17,10 @@ const Sidebar = ({ setActivePage }) => {
   }, []);
 
   const menuItems = [
-    { key: "create", label: "작성", icon: <FaPen /> },
-    { key: "certification", label: "인증", icon: <FaCheckCircle /> },
-    { key: "scrapbook", label: "스크랩북", icon: <FaBookmark /> },
-    { key: "mypage", label: "MY", icon: <FaUser /> },
+    { path: "/app/create", label: "작성", icon: <FaPen /> },
+    { path: "/app/certification", label: "인증", icon: <FaCheckCircle /> },
+    { path: "/app/scrapbook", label: "스크랩북", icon: <FaBookmark /> },
+    { path: "/app/mypage", label: "MY", icon: <FaUser /> },
   ];
 
   return (
@@ -26,10 +28,7 @@ const Sidebar = ({ setActivePage }) => {
       {/* 로고 */}
       <div
         className="logo-box"
-        onClick={() => {
-          setActive("postlist");
-          setActivePage("postlist");
-        }}
+        onClick={() => navigate("/app/postlist")}
         style={{ cursor: "pointer" }}
       >
         <img src="/logo2.png" alt="logo2" className="logo-img" />
@@ -39,7 +38,7 @@ const Sidebar = ({ setActivePage }) => {
       <div className="profile-box">
         <img
           src={user?.profileImage}
-          alt="사진"
+          alt="프로필"
           className="sidebar-profile-img"
         />
         <p className="username">{user?.name}님</p>
@@ -49,12 +48,11 @@ const Sidebar = ({ setActivePage }) => {
       <ul className="menu">
         {menuItems.map((item) => (
           <li
-            key={item.key}
-            className={`menu-item ${active === item.key ? "active" : ""}`}
-            onClick={() => {
-              setActive(item.key);
-              setActivePage(item.key);
-            }}
+            key={item.path}
+            className={`menu-item ${
+              location.pathname === item.path ? "active" : ""
+            }`}
+            onClick={() => navigate(item.path)}
           >
             {item.icon}
             <span>{item.label}</span>
