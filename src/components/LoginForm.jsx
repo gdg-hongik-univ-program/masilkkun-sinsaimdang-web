@@ -95,7 +95,7 @@ const LoginForm = () => {
                 placeholder="비밀번호"
               />
             </div>
-            <button type="submit" className="button">
+            <button type="submit" className="login-button">
               로그인
             </button>
           </div>
