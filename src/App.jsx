@@ -27,7 +27,7 @@ const App = () => {
           </Routes>
         </div>
       </div>
-      <div className="right-section">{/* 지도 자리 (아직 비어있음) */}</div>
+      <div className="right-section">{/* 지도 자리*/}</div>
     </div>
   );
 };

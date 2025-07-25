@@ -1,5 +1,5 @@
 .sidebar {
-  width: 70px; /* 💡 고정 너비 */
+  width: 70px;
   height: 100vh;
   background-color: #fff;
   display: flex;
@@ -55,8 +55,8 @@
   font-size: 13px;
   cursor: pointer;
   color: #000;
-  padding: 12px 0; /* ✅ 클릭 영역 넓히기 */
-  width: 100%; /* ✅ 전체 너비로 확장 */
+  padding: 12px 0;
+  width: 100%;
   transition: background 0.2s;
   border-radius: 4px;
 }
