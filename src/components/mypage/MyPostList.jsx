@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import PostCard from "../post/PostCard"; // 기존 공통 카드 재사용
+import PostCard from "../post/PostCard";
 import "./MyPostList.css";
 
-// ✅ 임시 mock 데이터
+//mockdata 나중에 지워야함!!
 const mockMyPosts = [
   {
     id: 1,
@@ -22,10 +22,9 @@ const MyPostList = () => {
   const [myPosts, setMyPosts] = useState([]);
 
   useEffect(() => {
-    // ✅ API 연동 대신 mock 데이터 사용
     const fetchMyPosts = async () => {
       try {
-        // 나중에 API 연결 시 아래 코드로 대체:
+        // 나중에 API 연결 할 때!!!!:
         // const res = await baseApi.get("/myposts");
         // setMyPosts(res.data);
         setMyPosts(mockMyPosts); // 임시 mock 데이터 세팅

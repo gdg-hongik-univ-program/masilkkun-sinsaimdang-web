@@ -24,7 +24,7 @@ const ProfileHeader = () => {
   // 실제 api 연동하는 부분!!!!!
   /* const fetchProfile = async () => {
       try {
-        const res = await baseApi.get("/user/me"); // ← 실제 API 경로에 맞게 수정
+        const res = await baseApi.get("/user/me"); 
         setUser(res.data);
       } catch (err) {
         console.error("프로필 불러오기 실패:", err);
