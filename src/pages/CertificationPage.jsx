@@ -13,7 +13,7 @@ const CertificationPage = () => {
       </div>
 
       <div className="location-status">
-        <img src="/assests/location-pin.png" alt="pin" />
+        <img src="/src/assets/location-pin.png" alt="pin" />
         <p>위치를 확인하는 중...</p>
       </div>
     </div>

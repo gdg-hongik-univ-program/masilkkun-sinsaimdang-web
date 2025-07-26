@@ -7,6 +7,7 @@ const PostList = ({ region, category, sortOrder }) => {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
+    //Mockdata 지워야 할 부분!!!!!!!!
     const mockData = [
       {
         id: 1,
@@ -39,7 +40,9 @@ const PostList = ({ region, category, sortOrder }) => {
 
   // const fetchPosts = async () => {
   //   try {
-  //     const res = await baseApi.get("/api/posts", {
+  //     const url = isScrapMode ? "/scrap" : "/articles";
+
+  //     const res = await baseApi.get(url, {
   //       params: {
   //         region,
   //         category,
@@ -61,7 +64,7 @@ const PostList = ({ region, category, sortOrder }) => {
   // };
 
   //   fetchPosts();
-  // }, [region, category, sortOrder]);
+  // }, [region, category, sortOrder, isScrapMode]);
 
   return (
     <div className="post-list">

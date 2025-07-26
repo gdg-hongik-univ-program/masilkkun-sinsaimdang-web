@@ -1,4 +1,3 @@
-// Mapview.jsx
 import React, { useEffect } from "react";
 import "./Mapview.css";
 
