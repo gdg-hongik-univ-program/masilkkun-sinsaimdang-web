@@ -12,10 +12,32 @@ const Mapview = () => {
       window.kakao.maps.load(() => {
         const container = document.getElementById("map");
         const options = {
-          center: new window.kakao.maps.LatLng(37.5665, 126.978), // 서울 중심
-          level: 3,
+          center: new window.kakao.maps.LatLng(37.551, 126.926), // 홍대
+          level: 13,
         };
-        new window.kakao.maps.Map(container, options);
+        const map = new window.kakao.maps.Map(container, options);
+
+        const markerPosition = [
+          { lat: 37.551, lng: 126.926 },
+          { lat: 37.566, lng: 126.978 },
+        ];
+
+        markerPosition.forEach((pos) => {
+          const marker = new window.kakao.maps.Marker({
+            position: new window.kakao.maps.LatLng(pos.lat, pos.lng),
+          });
+
+          marker.setMap(map);
+        });
+
+        const mapTypeControl = new window.kakao.maps.MapTypeControl();
+        map.addControl(
+          mapTypeControl,
+          window.kakao.maps.ControlPosition.TOPRIGHT
+        );
+
+        const zoomControl = new window.kakao.maps.ZoomControl();
+        map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
       });
     };
     document.head.appendChild(script);
