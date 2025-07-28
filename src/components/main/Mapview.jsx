@@ -15,6 +15,8 @@ const Mapview = () => {
         const options = {
           center: new kakao.maps.LatLng(37.551, 126.926),
           level: 13,
+          disableDoubleClickZoom: true,
+          disableZoomAnimation: true,
         };
         const map = new kakao.maps.Map(container, options);
         const customOverlay = new kakao.maps.CustomOverlay({});
@@ -119,6 +121,18 @@ const Mapview = () => {
           });
         }
 
+        const linePath = positions;
+
+        const polyline = new kakao.maps.Polyline({
+          path: linePath,
+          strokeWeight: 4,
+          strokeColor: "#ff0000ff",
+          strokeOpacity: 1,
+          strokeStyle: "solid",
+        });
+
+        polyline.setMap(map);
+
         // === 폴리곤 세팅 ===
         let detailMode = false;
         let polygons = [];
@@ -154,6 +168,7 @@ const Mapview = () => {
             const coords = unit.geometry.coordinates[0];
             const name = unit.properties.SIG_KOR_NM;
             const code = unit.properties.SIG_CD;
+
             const path = coords.map(
               (coord) => new kakao.maps.LatLng(coord[1], coord[0])
             );
@@ -176,30 +191,14 @@ const Mapview = () => {
 
           polygons.push(polygon);
 
-          kakao.maps.event.addListener(polygon, "mouseover", (e) => {
-            polygon.setOptions({ fillColor: "#09f" });
-            customOverlay.setContent(`<div class="area">${area.name}</div>`);
-            customOverlay.setPosition(e.latLng);
-            customOverlay.setMap(map);
-          });
-
-          kakao.maps.event.addListener(polygon, "mousemove", (e) => {
-            customOverlay.setPosition(e.latLng);
-          });
-
-          kakao.maps.event.addListener(polygon, "mouseout", () => {
-            polygon.setOptions({ fillColor: "#fff" });
-            customOverlay.setMap(null);
-          });
+          let isSelected = false;
 
           kakao.maps.event.addListener(polygon, "click", (e) => {
-            if (!detailMode) {
-              map.setLevel(10);
-              map.panTo(e.latLng);
-            } else {
-              console.log("지역 코드:", area.location);
-              // callFunctionWithRegionCode(area.location);
-            }
+            isSelected = !isSelected;
+            polygon.setOptions({
+              fillColor: isSelected ? "#FF6347" : "#fff",
+              fillOpacity: 0.7,
+            });
           });
         }
 
