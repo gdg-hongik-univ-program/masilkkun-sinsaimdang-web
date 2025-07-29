@@ -13,11 +13,73 @@ const Register = () => {
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
 
+  // 중복 확인 여부 상태
+  const [emailChecked, setEmailChecked] = useState(false);
+  const [nicknameChecked, setNicknameChecked] = useState(false);
+
+  // 이메일 중복 확인
+  const checkEmailDuplication = async () => {
+    if (!email.includes("@")) {
+      alert("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await baseApi.get("/auth/check-email", {
+        params: { email },
+      });
+      const isAvailable = res.data.data.available;
+
+      if (isAvailable) {
+        alert("사용 가능한 이메일입니다.");
+        setEmailChecked(true);
+      } else {
+        alert("이미 사용 중인 이메일입니다.");
+        setEmailChecked(false);
+      }
+    } catch (error) {
+      console.error("이메일 중복 확인 오류:", error);
+      alert("이메일 중복 확인 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 닉네임 중복 확인
+  const checkNicknameDuplication = async () => {
+    if (nickname.length < 2 || nickname.length > 12) {
+      alert("닉네임은 2자 이상 12자 이하로 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await baseApi.get("/auth/check-nickname", {
+        params: { nickname },
+      });
+
+      const isAvailable = res.data.data.available;
+
+      if (isAvailable) {
+        alert("사용 가능한 닉네임입니다.");
+        setNicknameChecked(true);
+      } else {
+        alert("이미 사용 중인 닉네임입니다.");
+        setNicknameChecked(false);
+      }
+    } catch (error) {
+      console.error("닉네임 중복 확인 오류:", error);
+      alert("닉네임 중복 확인 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email.includes("@")) {
       alert("올바른 이메일 주소를 입력해주세요.");
+      return;
+    }
+
+    if (!emailChecked) {
+      alert("이메일 중복 확인을 먼저 해주세요.");
       return;
     }
 
@@ -47,7 +109,11 @@ const Register = () => {
       return;
     }
 
-    // API 요청 다시 확인 차 해봐야하는곳
+    if (!nicknameChecked) {
+      alert("닉네임 중복 확인을 먼저 해주세요.");
+      return;
+    }
+
     try {
       const response = await baseApi.post("/auth/signup", {
         email,
@@ -82,10 +148,17 @@ const Register = () => {
               type="email"
               placeholder="이메일을 입력해주세요."
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailChecked(false); // 수정 시 다시 확인 필요
+              }}
               className="register-input"
             />
-            <button type="button" className="dup-check-button">
+            <button
+              type="button"
+              className="dup-check-button"
+              onClick={checkEmailDuplication}
+            >
               중복 확인
             </button>
           </div>
@@ -135,10 +208,17 @@ const Register = () => {
               type="text"
               placeholder="2자 이상 12자 이하"
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              onChange={(e) => {
+                setNickname(e.target.value);
+                setNicknameChecked(false); // 수정 시 다시 확인 필요
+              }}
               className="register-input"
             />
-            <button type="button" className="dup-check-button">
+            <button
+              type="button"
+              className="dup-check-button"
+              onClick={checkNicknameDuplication}
+            >
               중복 확인
             </button>
           </div>
