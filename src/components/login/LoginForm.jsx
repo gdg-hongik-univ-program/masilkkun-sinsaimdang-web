@@ -3,10 +3,7 @@ import "./LoginForm.css";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 
-const user = {
-  id: "soojin",
-  password: "12345678",
-}; // mock data
+import baseApi from "../../api/baseApi";
 
 const LoginForm = () => {
   const [id, setId] = useState("");
@@ -29,53 +26,27 @@ const LoginForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    console.log("로그인 작동중"); // 버튼 작동 확인 여기!!!!!
+    try {
+      const response = await baseApi.post("/auth/login", {
+        email: id,
+        password,
+      });
+      console.log("response 전체: ", response);
 
-    // mock 데이터와 비교(api연결할때 지워야할 부분 )
-    if (id === user.id && password === user.password) {
-      console.log("로그인 성공 (Mock)");
-      const token = "mock-token-123";
+      const { accessToken } = response.data.data;
 
       if (isChecked) {
-        localStorage.setItem("token", token);
+        localStorage.setItem("accessToken", accessToken);
       } else {
-        sessionStorage.setItem("token", token);
+        sessionStorage.setItem("accessToken", accessToken);
       }
 
-      nav("/app/postlist"); //라우터에 등록된 경로로 이동
-    } else {
-      console.error("로그인 실패 (Mock)");
+      nav("/app/postlist");
+    } catch (error) {
+      console.error("로그인 실패:", error);
       alert("로그인에 실패했습니다.");
     }
   };
-  //여기까지 지워야함
-
-  //  try {
-  //       const response = await baseApi.post("/api/auth/login", {
-  //         id, // 또는 email: id, ← 백엔드 명세 확인
-  //         password,
-  //       });
-
-  //       const { accessToken, refreshToken } = response.data;
-  //       console.log("로그인 성공", response.data);
-
-  //       if (isChecked) {
-  //         // 로그인 유지
-  //         localStorage.setItem("accessToken", accessToken);
-  //         localStorage.setItem("refreshToken", refreshToken);
-  //       } else {
-  //         // 브라우저 닫으면 사라짐
-  //         sessionStorage.setItem("accessToken", accessToken);
-  //         sessionStorage.setItem("refreshToken", refreshToken);
-  //       }
-
-  //       nav("/app/postlist"); // 성공 시 이동
-
-  //     } catch (error) {
-  //       console.error("로그인 실패:", error);
-  //       alert("로그인에 실패했습니다.");
-  //     }
-  //   };
 
   return (
     <div className="loginform">
