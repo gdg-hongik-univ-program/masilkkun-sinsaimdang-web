@@ -9,6 +9,7 @@ const Mapview = () => {
     }&autoload=false`;
     script.onload = () => {
       window.kakao.maps.load(() => {
+
         const kakao = window.kakao;
 
         const container = document.getElementById("map");
