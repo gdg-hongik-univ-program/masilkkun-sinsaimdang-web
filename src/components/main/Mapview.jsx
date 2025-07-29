@@ -1,15 +1,20 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import "./Mapview.css";
+import { SiEclipseche } from "react-icons/si";
 
 const Mapview = () => {
+  const location = useLocation();
+  const isMyPage = location.pathname === "/app/mypage";
+
   useEffect(() => {
+    if (document.getElementById("kakao-map-script")) return;
     const script = document.createElement("script");
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
       import.meta.env.VITE_MAP_API
     }&autoload=false`;
     script.onload = () => {
       window.kakao.maps.load(() => {
-
         const kakao = window.kakao;
 
         const container = document.getElementById("map");
@@ -139,7 +144,9 @@ const Mapview = () => {
         let polygons = [];
         let areas = [];
 
-        loadGeoJson("/json/sido.json");
+        if (isMyPage) {
+          loadGeoJson("/json/sido.json");
+        }
 
         kakao.maps.event.addListener(map, "zoom_changed", () => {
           const level = map.getLevel();
@@ -151,6 +158,8 @@ const Mapview = () => {
             detailMode = false;
             clearPolygons();
             loadGeoJson("/json/sido.json");
+          } else {
+            clearPolygons();
           }
         });
 
@@ -212,7 +221,7 @@ const Mapview = () => {
       });
     };
     document.head.appendChild(script);
-  }, []);
+  }, [location.pathname]);
 
   return <div id="map" style={{ width: "100%", height: "100%" }}></div>;
 };
