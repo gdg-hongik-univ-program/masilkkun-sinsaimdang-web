@@ -1,19 +1,23 @@
+/* 사이드바 전체 컨테이너 */
 .sidebar {
   width: 70px;
   height: 100vh;
   background-color: #fff;
   display: flex;
   flex-direction: column;
+  justify-content: space-between; /* 상단/하단 공간 분리 */
   align-items: center;
-  padding-top: 16px;
+  padding: 16px 0;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
 }
 
+/* 로고 */
 .logo-box img {
   width: 60px;
   margin-bottom: 16px;
 }
 
+/* 프로필 박스 */
 .profile-box {
   width: 100%;
   height: 100px;
@@ -37,6 +41,7 @@
   font-size: 14px;
 }
 
+/* 메뉴 리스트 */
 .menu {
   list-style: none;
   padding: 0;
@@ -48,6 +53,7 @@
   align-items: center;
 }
 
+/* 각 메뉴 아이템 */
 .menu-item {
   display: flex;
   flex-direction: column;
@@ -65,8 +71,40 @@
   font-size: 18px;
   margin-bottom: 4px;
 }
+
+/* 선택된 메뉴 스타일 */
 .menu-item.active {
   background-color: #a08944;
   color: white;
   font-weight: bold;
+}
+
+/* 로그아웃 버튼 하단 고정 박스 */
+.sidebar-bottom {
+  padding-bottom: 16px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* 로그아웃 버튼 스타일 */
+.logout-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  cursor: pointer;
+  font-size: 12px;
+  transition: color 0.2s ease;
+}
+
+.logout-btn:hover {
+  color: #e74c3c;
+}
+
+/* 로그아웃 아이콘 */
+.logout-icon {
+  font-size: 18px;
+  margin-bottom: 4px;
 }

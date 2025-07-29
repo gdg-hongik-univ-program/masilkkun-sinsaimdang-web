@@ -50,7 +50,7 @@ const PostCard = ({ post }) => {
         {/* 작성자 정보 */}
         <div className="profile-section">
           <img
-            src="/img/default-profile.png" // 백엔드에 프로필 이미지가 없으므로 기본 이미지
+            src="/default-profile.png" // 백엔드에 프로필 이미지가 없으므로 기본 이미지
             alt="프로필"
             className="profile-img"
           />
