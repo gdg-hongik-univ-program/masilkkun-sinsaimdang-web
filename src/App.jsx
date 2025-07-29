@@ -38,7 +38,9 @@ const App = () => {
               }
             />
             <Route path="create" element={<PostCreatePage />} />
+
             <Route path="post/:id" element={<PostCoursePage />} />
+
             <Route path="certification" element={<CertificationPage />} />
             <Route path="scrapbook" element={<ScrapbookPage />} />
             <Route path="mypage" element={<MyPage />} />

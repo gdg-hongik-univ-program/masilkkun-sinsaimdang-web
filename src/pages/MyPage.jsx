@@ -1,4 +1,5 @@
 import React from "react";
+
 import ProfileHeader from "../components/mypage/ProfileHeader";
 import MyPostList from "../components/mypage/MyPostList";
 import "./MyPage.css";

@@ -10,11 +10,13 @@ const PostCard = ({ post }) => {
   const [bookmarkCount, setBookmarkCount] = useState(post.bookmarkCount);
   const allowedTags = ["여행지", "맛집", "카페"];
 
+
   const navigate = useNavigate();
 
   const handleCardClick = () => {
     navigate(`/app/post/${post.id}`);
   };
+
 
   const toggleLike = () => {
     setLiked((prev) => !prev);
@@ -27,11 +29,13 @@ const PostCard = ({ post }) => {
   };
 
   return (
+
     <div
       className="post-card"
       onClick={handleCardClick}
       style={{ cursor: "pointer" }}
     >
+
       <div className="post-images">
         <img src={post.image1} alt="이미지1" className="post-image" />
         <img src={post.image2} alt="이미지2" className="post-image" />
