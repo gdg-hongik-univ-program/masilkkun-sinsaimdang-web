@@ -1,0 +1,39 @@
+.region-wrapper {
+  width: 100%; /* 너비 조절 */
+  font-family: sans-serif;
+  position: relative;
+}
+
+.region-selected {
+  padding: 12px;
+  background-color: #f1f1f1;
+  border-radius: 12px; /* 둥근 모서리 */
+  cursor: pointer;
+  border: 1px solid #ccc;
+  height: 48px; /* 높이 조절 */
+  display: flex;
+  align-items: center;
+}
+
+.region-dropdown {
+  position: absolute; /* 레이아웃 영향 안 받음 */
+  top: 100%; /* selected 아래로 */
+  margin-top: 6px;
+  border: 1px solid #ccc;
+  border-radius: 12px; /* 둥근 모서리 */
+  background-color: white;
+  max-height: 180px; /* 전체 높이 제한 */
+  overflow-y: auto; /* 스크롤 생기게 */
+  padding: 0;
+  list-style: none;
+  width: 100%;
+}
+
+.region-dropdown li {
+  padding: 12px;
+  cursor: pointer;
+}
+
+.region-dropdown li:hover {
+  background-color: #f0f0f0;
+}

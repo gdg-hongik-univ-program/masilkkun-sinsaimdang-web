@@ -43,7 +43,9 @@ const PostCreatePage = () => {
 
   return (
     <div className="post-create-container">
-      <Region />
+      <div className="top-bar">
+        <Region />
+      </div>
       <input
         type="text"
         placeholder="제목을 입력해주세요."
