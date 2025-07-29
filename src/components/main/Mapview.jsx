@@ -35,7 +35,7 @@ const Mapview = () => {
         const container = document.getElementById("map");
         const options = isPostPage
           ? {
-              center: new kakao.maps.LatLng(37.2869619, 127.011801),
+              center: new kakao.maps.LatLng(37.27638, 127.051105),
               level: 4,
               disableDoubleClickZoom: true,
               disableZoomAnimation: true,
@@ -48,7 +48,7 @@ const Mapview = () => {
             };
         const map = new kakao.maps.Map(container, options);
 
-        // 공통 상수들
+        // 마커 이미지
         const MARKER_WIDTH = 33,
           MARKER_HEIGHT = 36,
           OFFSET_X = 12,
@@ -78,9 +78,9 @@ const Mapview = () => {
         );
 
         const positions = [
-          new kakao.maps.LatLng(37.2869619, 127.011801),
-          new kakao.maps.LatLng(37.2821351915, 127.0190947768),
-          new kakao.maps.LatLng(37.2884234215, 127.0229636943),
+          new kakao.maps.LatLng(37.27638, 127.051105),
+          new kakao.maps.LatLng(37.286066, 127.011681),
+          new kakao.maps.LatLng(37.300044, 127.000581),
         ];
 
         let selectedMarker = null;
@@ -127,6 +127,19 @@ const Mapview = () => {
 
             marker.normalImage = normalImage;
 
+            kakao.maps.event.addListener(marker, "click", () => {
+              if (!selectedMarker || selectedMarker !== marker) {
+                if (selectedMarker) {
+                  selectedMarker.setImage(selectedMarker.normalImage);
+                }
+                marker.setImage(clickImage);
+                selectedMarker = marker;
+              }
+
+              // 마커 클릭 시 오버레이 보이기
+              overlay.setMap(map);
+            });
+
             kakao.maps.event.addListener(marker, "mouseover", () => {
               if (!selectedMarker || selectedMarker !== marker) {
                 marker.setImage(overImage);
@@ -160,7 +173,7 @@ const Mapview = () => {
           polyline.setMap(map);
         }
 
-        // === 폴리곤 세팅 ===
+        // 폴리곤
         let detailMode = false;
         let polygons = [];
         let areas = [];
@@ -233,7 +246,7 @@ const Mapview = () => {
           });
         }
 
-        // === 컨트롤 UI 추가 ===
+        // 컨트롤 UI
         const mapTypeControl = new kakao.maps.MapTypeControl();
         map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
 

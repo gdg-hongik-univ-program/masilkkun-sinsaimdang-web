@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PostList from "../components/post/PostList";
 import "./PostListPage.css";
+import Region from "../components/layout/Region";
 
 const PostListPage = ({
   region,
@@ -13,13 +14,7 @@ const PostListPage = ({
   return (
     <div className="post-list-page">
       <div className="top-bar">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="지역을 선택해주세요."
-          value={region}
-          onChange={(e) => setRegion(e.target.value)}
-        />
+        <Region />
       </div>
 
       <div className="filter-bar">
