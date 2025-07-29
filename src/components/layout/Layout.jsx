@@ -8,7 +8,6 @@ import "./Layout.css";
 
 import PostCreatePage from "../../pages/PostCreatePage";
 
-
 const Layout = () => {
   const [activePage, setActivePage] = useState("작성");
 
@@ -81,7 +80,7 @@ const Layout = () => {
         </div>
         <div className="content-wrapper">{renderContent()}</div>
       </div>
-      <div className="right-section">{/* 지도 자리 */}</div>
+      <div className="right-section">{/* 지도 자리 ?*/}</div>
     </div>
   );
 };
