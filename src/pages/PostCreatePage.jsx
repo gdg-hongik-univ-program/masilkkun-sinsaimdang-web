@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./PostCreatePage.css";
-import baseApi from "../api/baseApi"; 
-
+import baseApi from "../api/baseApi";
+import Region from "../components/layout/Region";
 const PostCreatePage = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -44,19 +43,7 @@ const PostCreatePage = () => {
 
   return (
     <div className="post-create-container">
-      <select
-        className="post-create-region-select"
-        value={region}
-        onChange={(e) => setRegion(e.target.value)}
-      >
-        <option value="">지역을 선택해주세요.</option>
-        <option value="서울">서울</option>
-        <option value="부산">부산</option>
-        <option value="제주">제주</option>
-        <option value="경기">경기</option>
-        <option value="경상">경상</option>
-      </select>
-
+      <Region />
       <input
         type="text"
         placeholder="제목을 입력해주세요."

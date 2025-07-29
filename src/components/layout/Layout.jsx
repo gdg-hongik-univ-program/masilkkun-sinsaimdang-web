@@ -5,12 +5,10 @@ import CertPage from "../../pages/CertificationPage";
 import ScrapbookPage from "../../pages/ScrapbookPage";
 import MyPage from "../../pages/MyPage";
 import "./Layout.css";
-
-import PostCreatePage from "../../pages/PostCreatePage";
+import Region from "./Region";
 
 const Layout = () => {
   const [activePage, setActivePage] = useState("작성");
-
   const [region, setRegion] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("여행지");
   const [sortOrder, setSortOrder] = useState("기본순");
@@ -21,7 +19,7 @@ const Layout = () => {
         return (
           <div className="post-list-page">
             <div className="top-bar">
-              <input
+              <Region
                 type="text"
                 className="search-input"
                 placeholder="지역을 선택해주세요."

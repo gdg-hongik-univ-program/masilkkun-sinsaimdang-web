@@ -78,7 +78,7 @@ const Mapview = () => {
         );
 
         const positions = [
-          new kakao.maps.LatLng(37.2869619, 127.011801),
+          new kakao.maps.LatLng(37.27614, 127.011801),
           new kakao.maps.LatLng(37.2821351915, 127.0190947768),
           new kakao.maps.LatLng(37.2884234215, 127.0229636943),
         ];
