@@ -32,25 +32,35 @@
   color: #aaa;
 }
 
-/* ===== 프로필 영역 ===== */
+/* ===== 프로필 영역 (수정됨) ===== */
 .profile-section {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   margin: 12px 0 20px;
   gap: 12px;
 }
 
 .profile-img {
-  width: 42px;
-  height: 42px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background-color: #ccc;
   object-fit: cover;
+  overflow: hidden;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .username {
   font-weight: 600;
   font-size: 15px;
+  color: #2e2e2e; /* ✅ 닉네임이 흰색으로 보이던 문제 해결 */
+  white-space: nowrap;
 }
 
 .follow-btn {
@@ -61,10 +71,10 @@
   border-radius: 999px;
   font-size: 13px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 /* ===== 좋아요 / 북마크 ===== */
-/* 기존 .stats 유지하되 내부는 flex 박스 2개 */
 .stats {
   display: flex;
   width: 240px;
@@ -79,7 +89,6 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* 내부 분할 박스 */
 .stat-box {
   flex: 1;
   display: flex;
@@ -89,7 +98,6 @@
   padding: 12px;
 }
 
-/* 오른쪽 박스 왼쪽에 선 넣기 */
 .stat-box + .stat-box {
   border-left: 1px solid #ddd;
 }
@@ -163,6 +171,10 @@
   border: none;
   border-radius: 0;
   box-shadow: none;
+}
+
+.course-detail-item {
+  margin-bottom: 64px; /* 👉 설명과 다음 장소 사이 충분한 간격 */
 }
 
 .detail-title {
