@@ -6,6 +6,9 @@ import ScrapbookPage from "../../pages/ScrapbookPage";
 import MyPage from "../../pages/MyPage";
 import "./Layout.css";
 
+import PostCreatePage from "../../pages/PostCreatePage";
+
+
 const Layout = () => {
   const [activePage, setActivePage] = useState("작성");
 
