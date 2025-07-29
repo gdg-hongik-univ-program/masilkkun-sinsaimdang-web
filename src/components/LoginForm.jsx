@@ -27,6 +27,7 @@ const LoginForm = () => {
   const onPasswordChange = (e) => {
     setPassword(e.target.value);
   };
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -49,27 +50,34 @@ const LoginForm = () => {
       alert("로그인에 실패했습니다.");
     }
   };
+  //여기까지 지워야함
 
-  //   try {
-  //     const response = await baseApi.post("/api/auth/login", {
-  //       email: id,
-  //       password,
-  //     }); // 요청 보냄
-  //     console.log("로그인 성공", response.data);
+  //  try {
+  //       const response = await baseApi.post("/api/auth/login", {
+  //         id, // 또는 email: id, ← 백엔드 명세 확인
+  //         password,
+  //       });
 
-  //     if (isChecked) {
-  //       localStorage.setItem("token", response.data.token);
-  //       // 로그인 유지 체크 : 창 닫아도 로그인 유지 여기!!!!!
-  //     } else {
-  //       sessionStorage.setItem("token", response.data.token);
-  //       // 로그인 유지 체크 X : 창 닫으면 로그아웃
+  //       const { accessToken, refreshToken } = response.data;
+  //       console.log("로그인 성공", response.data);
+
+  //       if (isChecked) {
+  //         // 로그인 유지
+  //         localStorage.setItem("accessToken", accessToken);
+  //         localStorage.setItem("refreshToken", refreshToken);
+  //       } else {
+  //         // 브라우저 닫으면 사라짐
+  //         sessionStorage.setItem("accessToken", accessToken);
+  //         sessionStorage.setItem("refreshToken", refreshToken);
+  //       }
+
+  //       nav("/app/postlist"); // 성공 시 이동
+
+  //     } catch (error) {
+  //       console.error("로그인 실패:", error);
+  //       alert("로그인에 실패했습니다.");
   //     }
-  //     nav("/home");
-  //   } catch (error) {
-  //     console.error("로그인 실패:", error);
-  //     alert("로그인에 실패했습니다.");
-  //   }
-  // };
+  //   };
 
   return (
     <div className="loginform">

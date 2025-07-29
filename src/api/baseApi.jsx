@@ -11,5 +11,3 @@ const baseApi = axios.create({
 });
 
 export default baseApi;
-
-// 사용 예시: export const login = (data) => baseApi.post("/login", data);

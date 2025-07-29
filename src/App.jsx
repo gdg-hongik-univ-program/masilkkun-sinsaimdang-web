@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import PostListPage from "./pages/PostListPage";
 import PostCreatePage from "./pages/PostCreatePage";
+import PostCoursePage from "./pages/PostCoursePage";
 import CertificationPage from "./pages/CertificationPage";
 import ScrapbookPage from "./pages/ScrapbookPage";
 import MyPage from "./pages/MyPage";
@@ -37,6 +38,7 @@ const App = () => {
               }
             />
             <Route path="create" element={<PostCreatePage />} />
+            <Route path="post/:id" element={<PostCoursePage />} />
             <Route path="certification" element={<CertificationPage />} />
             <Route path="scrapbook" element={<ScrapbookPage />} />
             <Route path="mypage" element={<MyPage />} />
