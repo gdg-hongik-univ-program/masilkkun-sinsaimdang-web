@@ -91,7 +91,7 @@ const PostCoursePage = () => {
 
   if (loading) return <div>로딩 중...</div>;
   if (error) return <div>{error}</div>;
-  if (!post) return <div>게시글을 찾을 수 없습니다.</div>;
+  if (!post) return <div>게시글을 찾을 수 없습니다..</div>;
 
   return (
     <div className="post-course-page">
