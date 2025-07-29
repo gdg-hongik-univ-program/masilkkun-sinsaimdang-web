@@ -1,28 +1,54 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import "./Mapview.css";
 
 const Mapview = () => {
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
-      import.meta.env.VITE_MAP_API
-    }&autoload=false`;
-    script.onload = () => {
-      window.kakao.maps.load(() => {
+  const location = useLocation();
+  const isMyPage = location.pathname === "/app/mypage";
+  const isPostPage = /^\/app\/post\/\d+$/.test(location.pathname);
 
+  useEffect(() => {
+    // kakao SDK 로드 함수
+    function loadKakaoScript() {
+      return new Promise((resolve) => {
+        if (document.getElementById("kakao-map-script")) {
+          resolve();
+          return;
+        }
+        const script = document.createElement("script");
+        script.id = "kakao-map-script";
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
+          import.meta.env.VITE_MAP_API
+        }&autoload=false`;
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+      });
+    }
+
+    // 맵 초기화 함수
+    async function initializeMap() {
+      await loadKakaoScript();
+
+      window.kakao.maps.load(() => {
         const kakao = window.kakao;
 
         const container = document.getElementById("map");
-        const options = {
-          center: new kakao.maps.LatLng(37.551, 126.926),
-          level: 13,
-          disableDoubleClickZoom: true,
-          disableZoomAnimation: true,
-        };
+        const options = isPostPage
+          ? {
+              center: new kakao.maps.LatLng(37.2869619, 127.011801),
+              level: 4,
+              disableDoubleClickZoom: true,
+              disableZoomAnimation: true,
+            }
+          : {
+              center: new kakao.maps.LatLng(37.551, 126.926),
+              level: 13,
+              disableDoubleClickZoom: true,
+              disableZoomAnimation: true,
+            };
         const map = new kakao.maps.Map(container, options);
-        const customOverlay = new kakao.maps.CustomOverlay({});
 
-        // === 마커 세팅 ===
+        // 공통 상수들
         const MARKER_WIDTH = 33,
           MARKER_HEIGHT = 36,
           OFFSET_X = 12,
@@ -52,67 +78,12 @@ const Mapview = () => {
         );
 
         const positions = [
-          new kakao.maps.LatLng(37.55251925, 126.9249906),
-          new kakao.maps.LatLng(37.566, 126.978),
+          new kakao.maps.LatLng(37.2869619, 127.011801),
+          new kakao.maps.LatLng(37.2821351915, 127.0190947768),
+          new kakao.maps.LatLng(37.2884234215, 127.0229636943),
         ];
 
         let selectedMarker = null;
-
-        positions.forEach((position, index) => {
-          const gapX = MARKER_WIDTH + SPRITE_GAP;
-          const originY = (MARKER_HEIGHT + SPRITE_GAP) * index;
-          const overOriginY = (OVER_MARKER_HEIGHT + SPRITE_GAP) * index;
-
-          const normalOrigin = new kakao.maps.Point(0, originY);
-          const clickOrigin = new kakao.maps.Point(gapX, originY);
-          const overOrigin = new kakao.maps.Point(gapX * 2, overOriginY);
-
-          const normalImage = createMarkerImage(
-            markerSize,
-            markerOffset,
-            normalOrigin
-          );
-          const overImage = createMarkerImage(
-            overMarkerSize,
-            overMarkerOffset,
-            overOrigin
-          );
-          const clickImage = createMarkerImage(
-            markerSize,
-            markerOffset,
-            clickOrigin
-          );
-
-          const marker = new kakao.maps.Marker({
-            map,
-            position,
-            image: normalImage,
-          });
-
-          marker.normalImage = normalImage;
-
-          kakao.maps.event.addListener(marker, "mouseover", () => {
-            if (!selectedMarker || selectedMarker !== marker) {
-              marker.setImage(overImage);
-            }
-          });
-
-          kakao.maps.event.addListener(marker, "mouseout", () => {
-            if (!selectedMarker || selectedMarker !== marker) {
-              marker.setImage(normalImage);
-            }
-          });
-
-          kakao.maps.event.addListener(marker, "click", () => {
-            if (!selectedMarker || selectedMarker !== marker) {
-              if (selectedMarker) {
-                selectedMarker.setImage(selectedMarker.normalImage);
-              }
-              marker.setImage(clickImage);
-            }
-            selectedMarker = marker;
-          });
-        });
 
         function createMarkerImage(markerSize, offset, spriteOrigin) {
           return new kakao.maps.MarkerImage(SPRITE_MARKER_URL, markerSize, {
@@ -122,24 +93,81 @@ const Mapview = () => {
           });
         }
 
-        const linePath = positions;
+        if (isPostPage) {
+          positions.forEach((position, index) => {
+            const gapX = MARKER_WIDTH + SPRITE_GAP;
+            const originY = (MARKER_HEIGHT + SPRITE_GAP) * index;
+            const overOriginY = (OVER_MARKER_HEIGHT + SPRITE_GAP) * index;
 
-        const polyline = new kakao.maps.Polyline({
-          path: linePath,
-          strokeWeight: 4,
-          strokeColor: "#ff0000ff",
-          strokeOpacity: 1,
-          strokeStyle: "solid",
-        });
+            const normalOrigin = new kakao.maps.Point(0, originY);
+            const clickOrigin = new kakao.maps.Point(gapX, originY);
+            const overOrigin = new kakao.maps.Point(gapX * 2, overOriginY);
 
-        polyline.setMap(map);
+            const normalImage = createMarkerImage(
+              markerSize,
+              markerOffset,
+              normalOrigin
+            );
+            const overImage = createMarkerImage(
+              overMarkerSize,
+              overMarkerOffset,
+              overOrigin
+            );
+            const clickImage = createMarkerImage(
+              markerSize,
+              markerOffset,
+              clickOrigin
+            );
+
+            const marker = new kakao.maps.Marker({
+              map,
+              position,
+              image: normalImage,
+            });
+
+            marker.normalImage = normalImage;
+
+            kakao.maps.event.addListener(marker, "mouseover", () => {
+              if (!selectedMarker || selectedMarker !== marker) {
+                marker.setImage(overImage);
+              }
+            });
+
+            kakao.maps.event.addListener(marker, "mouseout", () => {
+              if (!selectedMarker || selectedMarker !== marker) {
+                marker.setImage(normalImage);
+              }
+            });
+
+            kakao.maps.event.addListener(marker, "click", () => {
+              if (!selectedMarker || selectedMarker !== marker) {
+                if (selectedMarker) {
+                  selectedMarker.setImage(selectedMarker.normalImage);
+                }
+                marker.setImage(clickImage);
+              }
+              selectedMarker = marker;
+            });
+          });
+
+          const polyline = new kakao.maps.Polyline({
+            path: positions,
+            strokeWeight: 4,
+            strokeColor: "#ff0000ff",
+            strokeOpacity: 1,
+            strokeStyle: "solid",
+          });
+          polyline.setMap(map);
+        }
 
         // === 폴리곤 세팅 ===
         let detailMode = false;
         let polygons = [];
         let areas = [];
 
-        loadGeoJson("/json/sido.json");
+        if (isMyPage) {
+          loadGeoJson("/json/sido.json");
+        }
 
         kakao.maps.event.addListener(map, "zoom_changed", () => {
           const level = map.getLevel();
@@ -151,6 +179,8 @@ const Mapview = () => {
             detailMode = false;
             clearPolygons();
             loadGeoJson("/json/sido.json");
+          } else {
+            clearPolygons();
           }
         });
 
@@ -194,7 +224,7 @@ const Mapview = () => {
 
           let isSelected = false;
 
-          kakao.maps.event.addListener(polygon, "click", (e) => {
+          kakao.maps.event.addListener(polygon, "click", () => {
             isSelected = !isSelected;
             polygon.setOptions({
               fillColor: isSelected ? "#FF6347" : "#fff",
@@ -210,9 +240,10 @@ const Mapview = () => {
         const zoomControl = new kakao.maps.ZoomControl();
         map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
       });
-    };
-    document.head.appendChild(script);
-  }, []);
+    }
+
+    initializeMap();
+  }, [location.pathname]);
 
   return <div id="map" style={{ width: "100%", height: "100%" }}></div>;
 };
