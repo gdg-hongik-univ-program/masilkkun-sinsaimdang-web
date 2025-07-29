@@ -1,0 +1,85 @@
+.post-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: white;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.post-images {
+  display: flex;
+}
+
+.post-image {
+  width: 50%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 0 12px;
+}
+
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: bold;
+  margin: 0;
+}
+
+.post-date {
+  font-size: 12px;
+  color: gray;
+  margin: 0;
+}
+
+.post-location {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 8px 12px;
+}
+
+.post-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 12px 8px;
+}
+
+.tag {
+  color: #555;
+  font-size: 13px;
+}
+
+.post-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+  padding-right: 8px;
+}
+.action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+}

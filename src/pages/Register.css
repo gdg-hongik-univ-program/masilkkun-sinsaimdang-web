@@ -1,0 +1,72 @@
+.register-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 16px;
+}
+
+.register-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 40px;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.register-input {
+  height: 44px;
+  font-size: 16px;
+  padding: 8px 12px;
+  border: 1px solid #9a7937;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.register-label {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.dup-check-button {
+  margin-left: 8px;
+  padding: 8px 12px;
+  background-color: #9a7937;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  height: 44px;
+}
+
+.input-with-button {
+  display: flex;
+  align-items: center;
+}
+
+.register-button {
+  margin-top: 24px;
+  padding: 12px;
+  background-color: #9a7937;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+}
