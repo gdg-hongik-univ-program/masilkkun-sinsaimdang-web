@@ -51,9 +51,7 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar">
-      {/* 상단: 로고, 프로필, 메뉴 */}
       <div className="sidebar-top">
-        {/* 로고 */}
         <div
           className="logo-box"
           onClick={() => navigate("/app/postlist")}
@@ -62,7 +60,6 @@ const Sidebar = () => {
           <img src="/logo2.png" alt="logo2" className="logo-img" />
         </div>
 
-        {/* 프로필 박스 */}
         <div className="profile-box">
           <img
             src={user?.profileImage}
@@ -72,7 +69,6 @@ const Sidebar = () => {
           <p className="username">{user?.name}님</p>
         </div>
 
-        {/* 메뉴 */}
         <ul className="menu">
           {menuItems.map((item) => (
             <li
@@ -88,8 +84,6 @@ const Sidebar = () => {
           ))}
         </ul>
       </div>
-
-      {/* 하단: 로그아웃 */}
       <div className="sidebar-bottom">
         <div className="logout-btn" onClick={handleLogout}>
           <FaSignOutAlt className="logout-icon" />
