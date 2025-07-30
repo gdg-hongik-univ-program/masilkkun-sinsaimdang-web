@@ -13,11 +13,9 @@ const Register = () => {
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
 
-  // 중복 확인 여부 상태
   const [emailChecked, setEmailChecked] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
 
-  // 이메일 중복 확인
   const checkEmailDuplication = async () => {
     if (!email.includes("@")) {
       alert("올바른 이메일 형식을 입력해주세요.");
@@ -43,7 +41,6 @@ const Register = () => {
     }
   };
 
-  // 닉네임 중복 확인
   const checkNicknameDuplication = async () => {
     if (nickname.length < 2 || nickname.length > 12) {
       alert("닉네임은 2자 이상 12자 이하로 입력해주세요.");
@@ -84,7 +81,9 @@ const Register = () => {
     }
 
     if (password.length < 4 || password.length > 16) {
-      alert("비밀번호는 4자 이상 16자 이하로 입력해주세요.");
+      alert(
+        "비밀번호는 8~20자 이하, 대소문자, 숫자, 특수문자 포함해서 입력해주세요."
+      );
       return;
     }
 
@@ -105,7 +104,7 @@ const Register = () => {
     }
 
     if (nickname.length < 2 || nickname.length > 12) {
-      alert("닉네임은 2자 이상 12자 이하로 입력해주세요.");
+      alert("닉네임은 2자 이상 10자 이하로 입력해주세요.");
       return;
     }
 
@@ -140,7 +139,6 @@ const Register = () => {
     <div className="register-container">
       <h2 className="register-title">회원가입</h2>
       <form onSubmit={handleSubmit} className="register-form">
-        {/* 이메일 */}
         <div className="form-group">
           <label className="register-label">이메일</label>
           <div className="input-with-button">
@@ -150,7 +148,7 @@ const Register = () => {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setEmailChecked(false); // 수정 시 다시 확인 필요
+                setEmailChecked(false);
               }}
               className="register-input"
             />
@@ -164,19 +162,17 @@ const Register = () => {
           </div>
         </div>
 
-        {/* 비밀번호 */}
         <div className="form-group">
           <label className="register-label">비밀번호</label>
           <input
             type="password"
-            placeholder="4자 이상 16자 이하의 영어 대소문자, 숫자, 특수문자 조합"
+            placeholder="8자 이상 20자 이하의 영어 대소문자, 숫자, 특수문자 조합"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="register-input"
           />
         </div>
 
-        {/* 비밀번호 확인 */}
         <div className="form-group">
           <label className="register-label">비밀번호 확인</label>
           <input
@@ -188,7 +184,6 @@ const Register = () => {
           />
         </div>
 
-        {/* 이름 */}
         <div className="form-group">
           <label className="register-label">이름</label>
           <input
@@ -200,17 +195,16 @@ const Register = () => {
           />
         </div>
 
-        {/* 닉네임 */}
         <div className="form-group">
           <label className="register-label">닉네임</label>
           <div className="input-with-button">
             <input
               type="text"
-              placeholder="2자 이상 12자 이하"
+              placeholder="2자 이상 10자 이하"
               value={nickname}
               onChange={(e) => {
                 setNickname(e.target.value);
-                setNicknameChecked(false); // 수정 시 다시 확인 필요
+                setNicknameChecked(false);
               }}
               className="register-input"
             />
@@ -224,7 +218,6 @@ const Register = () => {
           </div>
         </div>
 
-        {/* 제출 */}
         <button type="submit" className="register-button">
           회원가입
         </button>
