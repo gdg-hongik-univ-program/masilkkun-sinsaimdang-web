@@ -46,7 +46,7 @@ const Register = () => {
   // 닉네임 중복 확인
   const checkNicknameDuplication = async () => {
     if (nickname.length < 2 || nickname.length > 12) {
-      alert("닉네임은 2자 이상 12자 이하로 입력해주세요.");
+      alert("닉네임은 2자 이상 10자 이하로 입력해주세요.");
       return;
     }
 
@@ -84,7 +84,9 @@ const Register = () => {
     }
 
     if (password.length < 4 || password.length > 16) {
-      alert("비밀번호는 4자 이상 16자 이하로 입력해주세요.");
+      alert(
+        "비밀번호는 8~20자 이하, 대소문자, 숫자, 특수문자 포함해서 입력해주세요."
+      );
       return;
     }
 
@@ -105,7 +107,7 @@ const Register = () => {
     }
 
     if (nickname.length < 2 || nickname.length > 12) {
-      alert("닉네임은 2자 이상 12자 이하로 입력해주세요.");
+      alert("닉네임은 2자 이상 10자 이하로 입력해주세요.");
       return;
     }
 
@@ -169,7 +171,7 @@ const Register = () => {
           <label className="register-label">비밀번호</label>
           <input
             type="password"
-            placeholder="4자 이상 16자 이하의 영어 대소문자, 숫자, 특수문자 조합"
+            placeholder="비밀번호는 8~20자 이하, 대소문자, 숫자, 특수문자 포함"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="register-input"
@@ -206,7 +208,7 @@ const Register = () => {
           <div className="input-with-button">
             <input
               type="text"
-              placeholder="2자 이상 12자 이하"
+              placeholder="2자 이상 10자 이하"
               value={nickname}
               onChange={(e) => {
                 setNickname(e.target.value);

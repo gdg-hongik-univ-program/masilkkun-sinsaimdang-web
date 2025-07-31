@@ -10,7 +10,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 200px;
+  width: 270px;
+  justify-content: center;
 }
 
 input {
@@ -23,8 +24,8 @@ input {
 }
 
 .login-button {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   background-color: #9a7937;
   border-radius: 10%;
   border-color: #9a7937;
@@ -33,23 +34,26 @@ input {
 }
 
 .logo {
-  width: 100px;
+  width: 350px;
+  height: 350px;
+  align-items: center;
 }
 
 .formbody {
   display: flex;
   gap: 12px;
   align-items: center;
+  width: 350px;
 }
 
 .formtitle {
-  width: 272px;
+  width: 350px;
   text-align: left;
   margin-bottom: 8px;
 }
 
 .formbox {
-  width: 320px;
+  width: 350px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
