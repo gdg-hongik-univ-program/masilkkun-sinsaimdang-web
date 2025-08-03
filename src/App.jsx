@@ -9,12 +9,15 @@ import CertificationPage from "./pages/CertificationPage";
 import ScrapbookPage from "./pages/ScrapbookPage";
 import MyPage from "./pages/MyPage";
 import Mapview from "./components/main/Mapview";
+import LoginForm from "./components/login/LoginForm";
+import Modal from "./components/layout/Modal";
 import "./components/layout/Layout.css";
 
 const App = () => {
   const [region, setRegion] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("여행지");
   const [sortOrder, setSortOrder] = useState("기본순");
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
     <div className="layout-container">

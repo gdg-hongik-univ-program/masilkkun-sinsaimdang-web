@@ -10,9 +10,12 @@ import {
 } from "react-icons/fa";
 import "./Sidebar.css";
 import baseApi from "../../api/baseApi";
+import Modal from "./Modal";
+import LoginForm from "../login/LoginForm";
 
 const Sidebar = () => {
   const [user, setUser] = useState(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -49,6 +52,16 @@ const Sidebar = () => {
     { path: "/app/mypage", label: "MY", icon: <FaUser /> },
   ];
 
+  const handleMenuClick = (path) => {
+    console.log("메뉴 클릭:", path);
+    if (!user && path === "/app/mypage") {
+      console.log("로그인 안됨, 모달 열림");
+      setIsLoginModalOpen(true);
+      return;
+    }
+    navigate(path);
+  };
+
   return (
     <div className="sidebar">
       {/* 상단: 로고, 프로필, 메뉴 */}
@@ -80,7 +93,7 @@ const Sidebar = () => {
               className={`menu-item ${
                 location.pathname === item.path ? "active" : ""
               }`}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleMenuClick(item.path)}
             >
               {item.icon}
               <span>{item.label}</span>
@@ -96,6 +109,17 @@ const Sidebar = () => {
           <span>로그아웃</span>
         </div>
       </div>
+      <Modal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      >
+        <LoginForm
+          onSuccess={() => {
+            setIsLoginModalOpen(false);
+            window.location.reload(); // 또는 setUser 재요청
+          }}
+        />
+      </Modal>
     </div>
   );
 };
