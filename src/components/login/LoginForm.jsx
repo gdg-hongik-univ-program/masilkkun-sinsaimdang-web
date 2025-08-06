@@ -9,6 +9,7 @@ const LoginForm = () => {
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [isChecked, setIsChecked] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const nav = useNavigate();
 
   const onChangeCheckbox = (e) => {
@@ -17,10 +18,12 @@ const LoginForm = () => {
 
   const onIdChange = (e) => {
     setId(e.target.value);
+    setErrorMessage("");
   };
 
   const onPasswordChange = (e) => {
     setPassword(e.target.value);
+    setErrorMessage("");
   };
 
   const handleLogin = async (e) => {
@@ -44,7 +47,9 @@ const LoginForm = () => {
       nav("/app/postlist");
     } catch (error) {
       console.error("로그인 실패:", error);
-      alert("로그인에 실패했습니다.");
+      setErrorMessage(
+        "로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요."
+      );
     }
   };
 
@@ -71,6 +76,7 @@ const LoginForm = () => {
                 placeholder="비밀번호"
               />
             </div>
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
             <button type="submit" className="login-button">
               로그인
             </button>

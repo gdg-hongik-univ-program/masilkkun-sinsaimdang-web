@@ -79,3 +79,9 @@ input {
   color: inherit;
   cursor: default;
 }
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+}

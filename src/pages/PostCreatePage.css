@@ -132,3 +132,39 @@
   border: none;
   color: white;
 }
+.post-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.tag-item {
+  color: #555;
+  background-color: #f2f2f2;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+}
+
+.tag-select-wrapper {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.tag-select-button {
+  padding: 6px 14px;
+  font-size: 14px;
+  border-radius: 16px;
+  background-color: white;
+  color: #a08647;
+  border: 1px solid #a08647;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-select-button.selected {
+  background-color: #a08647;
+  color: white;
+}
