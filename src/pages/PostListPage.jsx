@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PostList from "../components/post/PostList";
 import "./PostListPage.css";
 import Region from "../components/layout/Region";
+import baseApi from "../api/baseApi";
 
 const PostListPage = ({
   region,
@@ -11,6 +12,26 @@ const PostListPage = ({
   sortOrder,
   setSortOrder,
 }) => {
+  const [posts, setPosts] = useState([]);
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await baseApi.get("/api/articles", {
+          params: {
+            tag: selectedCategory,
+            region: region,
+            sort: sortOrder,
+          },
+        });
+        setPosts(res.data.data.content); // API 응답 형식에 따라 수정
+      } catch (err) {
+        console.error("게시글 로딩 오류:", err);
+      }
+    };
+
+    fetchPosts();
+  }, [selectedCategory, region, sortOrder]);
+
   return (
     <div className="post-list-page">
       <div className="top-bar">
@@ -41,11 +62,7 @@ const PostListPage = ({
         </select>
       </div>
 
-      <PostList
-        region={region}
-        category={selectedCategory}
-        sortOrder={sortOrder}
-      />
+      <PostList posts={posts} />
     </div>
   );
 };
