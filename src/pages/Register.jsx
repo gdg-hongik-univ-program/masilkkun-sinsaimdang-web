@@ -4,7 +4,7 @@ import axios from "axios";
 import "./Register.css";
 import baseApi from "../api/baseApi";
 
-const Register = () => {
+const Register = ({ onSwitch }) => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -230,6 +230,9 @@ const Register = () => {
         <button type="submit" className="register-button">
           회원가입
         </button>
+        <span role="button" className="back-to-login" onClick={onSwitch}>
+          로그인으로 돌아가기
+        </span>
       </form>
     </div>
   );

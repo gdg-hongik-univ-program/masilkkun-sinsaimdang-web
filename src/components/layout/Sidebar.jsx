@@ -13,19 +13,32 @@ import baseApi from "../../api/baseApi";
 import Modal from "./Modal";
 import LoginForm from "../login/LoginForm";
 
-const Sidebar = () => {
+const Sidebar = ({ setIsLoginOpen }) => {
   const [user, setUser] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    axios
-      .get("/user/me")
-      .then((res) => setUser(res.data))
-      .catch((err) => console.error("유저 정보 요청 실패:", err));
-  }, []);
+    const token = localStorage.getItem("accessToken");
 
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    axios
+      .get("/user/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => setUser(res.data))
+      .catch((err) => {
+        console.error("유저 정보 요청 실패:", err);
+        setUser(null); // 실패하면 null로 설정
+      });
+  }, []);
   const handleLogout = async () => {
     try {
       await baseApi.post(
@@ -53,12 +66,12 @@ const Sidebar = () => {
   ];
 
   const handleMenuClick = (path) => {
-    console.log("메뉴 클릭:", path);
-    if (!user && path === "/app/mypage") {
-      console.log("로그인 안됨, 모달 열림");
-      setIsLoginModalOpen(true);
+    const isLoggedIn = false; // 또는 localStorage.getItem("token") 등
+    if (!isLoggedIn) {
+      setIsLoginOpen(true); // ✅ 로그인 안 되어 있으면 모달 열기
       return;
     }
+
     navigate(path);
   };
 
@@ -102,12 +115,21 @@ const Sidebar = () => {
         </ul>
       </div>
 
-      {/* 하단: 로그아웃 */}
+      {/* 하단: 로그인 or 로그아웃 */}
       <div className="sidebar-bottom">
-        <div className="logout-btn" onClick={handleLogout}>
-          <FaSignOutAlt className="logout-icon" />
-          <span>로그아웃</span>
-        </div>
+        {user ? (
+          // 🔓 로그인 되어 있을 때 → 로그아웃 버튼
+          <div className="logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt className="logout-icon" />
+            <span>로그아웃</span>
+          </div>
+        ) : (
+          // 🔐 로그인 안 되어 있을 때 → 로그인 버튼
+          <div className="logout-btn" onClick={() => setIsLoginModalOpen(true)}>
+            <FaUser className="logout-icon" />
+            <span>로그인</span>
+          </div>
+        )}
       </div>
       <Modal
         isOpen={isLoginModalOpen}
@@ -116,7 +138,7 @@ const Sidebar = () => {
         <LoginForm
           onSuccess={() => {
             setIsLoginModalOpen(false);
-            window.location.reload(); // 또는 setUser 재요청
+            window.location.reload(); // 또는 user 재요청 로직
           }}
         />
       </Modal>

@@ -1,11 +1,10 @@
 import logo from "../../assets/Logo.png";
 import "./LoginForm.css";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-
 import baseApi from "../../api/baseApi";
 
-const LoginForm = () => {
+const LoginForm = ({ onSwitch }) => {
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [isChecked, setIsChecked] = useState(false);
@@ -31,7 +30,6 @@ const LoginForm = () => {
         email: id,
         password,
       });
-      console.log("response 전체: ", response);
 
       const { accessToken } = response.data.data;
 
@@ -84,12 +82,24 @@ const LoginForm = () => {
               />
               로그인 유지
             </label>
-            <Link to="/Find-id" className="plane-link">
+            <label
+              type="button"
+              className="plane-link"
+              onClick={() => alert("아이디/비밀번호 찾기는 추후 구현")}
+            >
               아이디/비밀번호 찾기
-            </Link>
-            <Link to="/Register" className="plane-link">
+            </label>
+            <span
+              className="plain-button"
+              role="button"
+              tabIndex={0}
+              onClick={onSwitch}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSwitch();
+              }}
+            >
               회원가입
-            </Link>
+            </span>
           </div>
         </div>
       </form>
