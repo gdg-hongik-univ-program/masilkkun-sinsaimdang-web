@@ -29,7 +29,7 @@
   padding: 0 8px;
   gap: 8px;
 
-  flex-wrap: wrap; /*자동 줄바꿈 설정하는 부분입니당*/
+  flex-wrap: wrap;
 }
 
 .category-btns {

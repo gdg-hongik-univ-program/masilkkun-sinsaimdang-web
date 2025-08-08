@@ -30,7 +30,7 @@
   padding: 0 8px;
   gap: 8px;
 
-  flex-wrap: wrap; /* ✅ 너비 작을 때 자동 줄바꿈 */
+  flex-wrap: wrap;
 }
 
 .category-btns {
@@ -44,7 +44,7 @@
   background-color: #eee;
   border: none;
   cursor: pointer;
-  white-space: nowrap; /* ✅ 줄바꿈 방지 */
+  white-space: nowrap;
 }
 
 .category-btn.active {

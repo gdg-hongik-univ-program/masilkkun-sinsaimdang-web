@@ -8,7 +8,6 @@ const Mapview = () => {
   const isPostPage = /^\/app\/post\/\d+$/.test(location.pathname);
 
   useEffect(() => {
-    // kakao SDK 로드 함수
     function loadKakaoScript() {
       return new Promise((resolve) => {
         if (document.getElementById("kakao-map-script")) {
@@ -25,7 +24,6 @@ const Mapview = () => {
       });
     }
 
-    // 맵 초기화 함수
     async function initializeMap() {
       await loadKakaoScript();
 
@@ -48,7 +46,6 @@ const Mapview = () => {
             };
         const map = new kakao.maps.Map(container, options);
 
-        // 마커 이미지
         const MARKER_WIDTH = 33,
           MARKER_HEIGHT = 36,
           OFFSET_X = 12,
@@ -136,7 +133,6 @@ const Mapview = () => {
                 selectedMarker = marker;
               }
 
-              // 마커 클릭 시 오버레이 보이기
               overlay.setMap(map);
             });
 
@@ -173,7 +169,7 @@ const Mapview = () => {
           polyline.setMap(map);
         }
 
-        // 폴리곤
+        // 폴리곤 부분 !
         let detailMode = false;
         let polygons = [];
         let areas = [];
@@ -246,7 +242,6 @@ const Mapview = () => {
           });
         }
 
-        // 컨트롤 UI
         const mapTypeControl = new kakao.maps.MapTypeControl();
         map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
 

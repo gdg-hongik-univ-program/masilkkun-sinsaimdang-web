@@ -15,7 +15,7 @@ const PostCreatePage = () => {
       title,
       content,
       region,
-      author: "임시작성자", // TODO: 로그인 사용자 정보로 교체해야한다...
+      author: "임시작성자", // 로그인 사용자 정보로 교체해야한다...
       date: new Date().toLocaleDateString(),
       profileImg: "",
       tags: ["태그"],
@@ -31,7 +31,6 @@ const PostCreatePage = () => {
       const response = await baseApi.post("/api/posts", newPost);
       const createdPost = response.data;
 
-      // 게시글 등록 후 상세 페이지로 이동
       navigate(`/postcourse/${createdPost.id}`, {
         state: { post: createdPost },
       });

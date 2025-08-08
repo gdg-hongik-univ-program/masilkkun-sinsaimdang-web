@@ -36,7 +36,7 @@ const Sidebar = ({ setIsLoginOpen }) => {
       .then((res) => setUser(res.data))
       .catch((err) => {
         console.error("유저 정보 요청 실패:", err);
-        setUser(null); // 실패하면 null로 설정
+        setUser(null); 
       });
   }, []);
   const handleLogout = async () => {
@@ -66,9 +66,9 @@ const Sidebar = ({ setIsLoginOpen }) => {
   ];
 
   const handleMenuClick = (path) => {
-    const isLoggedIn = false; // 또는 localStorage.getItem("token") 등
+    const isLoggedIn = false; 
     if (!isLoggedIn) {
-      setIsLoginOpen(true); // ✅ 로그인 안 되어 있으면 모달 열기
+      setIsLoginOpen(true); 
       return;
     }
 
@@ -77,9 +77,7 @@ const Sidebar = ({ setIsLoginOpen }) => {
 
   return (
     <div className="sidebar">
-      {/* 상단: 로고, 프로필, 메뉴 */}
       <div className="sidebar-top">
-        {/* 로고 */}
         <div
           className="logo-box"
           onClick={() => navigate("/app/postlist")}
@@ -88,7 +86,6 @@ const Sidebar = ({ setIsLoginOpen }) => {
           <img src="/logo2.png" alt="logo2" className="logo-img" />
         </div>
 
-        {/* 프로필 박스 */}
         <div className="profile-box">
           <img
             src={user?.profileImage}
@@ -98,7 +95,6 @@ const Sidebar = ({ setIsLoginOpen }) => {
           <p className="username">{user?.name}님</p>
         </div>
 
-        {/* 메뉴 */}
         <ul className="menu">
           {menuItems.map((item) => (
             <li
@@ -114,8 +110,6 @@ const Sidebar = ({ setIsLoginOpen }) => {
           ))}
         </ul>
       </div>
-
-      {/* 하단: 로그인 or 로그아웃 */}
       <div className="sidebar-bottom">
         {user ? (
           // 🔓 로그인 되어 있을 때 → 로그아웃 버튼
