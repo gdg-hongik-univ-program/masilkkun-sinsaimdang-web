@@ -1,0 +1,37 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  height: 550px;
+  border-radius: 8px;
+  max-width: 500px;
+  margin: 100px auto;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.modal-default {
+  height: 550px;
+}
+
+.modal-register {
+  height: 700px;
+}

@@ -4,7 +4,7 @@ import axios from "axios";
 import "./Register.css";
 import baseApi from "../api/baseApi";
 
-const Register = () => {
+const Register = ({ onSwitch }) => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -43,7 +43,7 @@ const Register = () => {
 
   const checkNicknameDuplication = async () => {
     if (nickname.length < 2 || nickname.length > 12) {
-      alert("닉네임은 2자 이상 12자 이하로 입력해주세요.");
+      alert("닉네임은 2자 이상 10자 이하로 입력해주세요.");
       return;
     }
 
@@ -166,7 +166,7 @@ const Register = () => {
           <label className="register-label">비밀번호</label>
           <input
             type="password"
-            placeholder="8자 이상 20자 이하의 영어 대소문자, 숫자, 특수문자 조합"
+            placeholder="비밀번호는 8~20자 이하, 대소문자, 숫자, 특수문자 포함"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="register-input"
@@ -221,6 +221,9 @@ const Register = () => {
         <button type="submit" className="register-button">
           회원가입
         </button>
+        <span role="button" className="back-to-login" onClick={onSwitch}>
+          로그인으로 돌아가기
+        </span>
       </form>
     </div>
   );
