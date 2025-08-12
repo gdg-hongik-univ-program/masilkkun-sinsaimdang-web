@@ -34,7 +34,7 @@ const Mapview = () => {
         const options = isPostPage
           ? {
               center: new kakao.maps.LatLng(37.27638, 127.051105),
-              level: 4,
+              level: 6,
               disableDoubleClickZoom: true,
               disableZoomAnimation: true,
             }

@@ -9,18 +9,21 @@ import CertificationPage from "./pages/CertificationPage";
 import ScrapbookPage from "./pages/ScrapbookPage";
 import MyPage from "./pages/MyPage";
 import Mapview from "./components/main/Mapview";
+import LoginForm from "./components/login/LoginForm";
+import LoginRegisterModal from "./components/layout/LoginRegisterModal";
 import "./components/layout/Layout.css";
 
 const App = () => {
   const [region, setRegion] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("여행지");
   const [sortOrder, setSortOrder] = useState("기본순");
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
     <div className="layout-container">
       <div className="left-section">
         <div className="sidebar-wrapper">
-          <Sidebar />
+          <Sidebar setIsLoginOpen={setIsLoginOpen} />
         </div>
         <div className="content-wrapper">
           <Routes>
@@ -51,6 +54,10 @@ const App = () => {
       <div className="right-section">
         <Mapview />
       </div>
+      <LoginRegisterModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+      />
     </div>
   );
 };

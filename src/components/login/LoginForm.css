@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 12px;
   height: 100vh;
 }
@@ -10,7 +9,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 200px;
+  width: 270px;
+  justify-content: center;
 }
 
 input {
@@ -23,8 +23,8 @@ input {
 }
 
 .login-button {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   background-color: #9a7937;
   border-radius: 10%;
   border-color: #9a7937;
@@ -33,23 +33,26 @@ input {
 }
 
 .logo {
-  width: 100px;
+  width: 300px;
+  height: 300px;
+  align-items: center;
 }
 
 .formbody {
   display: flex;
   gap: 12px;
   align-items: center;
+  width: 350px;
 }
 
 .formtitle {
-  width: 272px;
+  width: 350px;
   text-align: left;
   margin-bottom: 8px;
 }
 
 .formbox {
-  width: 320px;
+  width: 350px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -84,4 +87,18 @@ input {
   font-size: 14px;
   margin-top: 8px;
   text-align: center;
+
+.plain-button {
+  color: #555; /* 글자 색 (원하는 색상) */
+  cursor: pointer; /* 마우스 포인터 */
+  text-decoration: none; /* 밑줄 제거 */
+  background: none; /* 배경 제거 */
+  border: none; /* 테두리 제거 */
+  padding: 0; /* 여백 제거 */
+  font: inherit; /* 글꼴 상속 */
+  display: inline; /* 인라인 요소 유지 */
+}
+
+.plain-button:hover {
+  text-decoration: none;
 }

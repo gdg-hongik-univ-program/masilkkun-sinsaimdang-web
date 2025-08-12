@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import baseApi from "../api/baseApi";
 import "./Register.css";
 
-const Register = () => {
+const Register = ({ onSwitch }) => {
   const navigate = useNavigate();
 
   // 입력값 상태
@@ -57,6 +57,7 @@ const Register = () => {
 
     if (nickname.length < 2 || nickname.length > 12) {
       setNicknameMessage("닉네임은 2자 이상 12자 이하로 입력해주세요.");
+
       return;
     }
 
@@ -192,6 +193,9 @@ const Register = () => {
           <label className="register-label">비밀번호</label>
           <input
             type="password"
+
+            placeholder="비밀번호는 8~20자 이하, 대소문자, 숫자, 특수문자 포함"
+
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -274,6 +278,9 @@ const Register = () => {
         <button type="submit" className="register-button">
           회원가입
         </button>
+        <span role="button" className="back-to-login" onClick={onSwitch}>
+          로그인으로 돌아가기
+        </span>
       </form>
     </div>
   );

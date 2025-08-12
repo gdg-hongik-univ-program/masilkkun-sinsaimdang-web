@@ -10,19 +10,35 @@ import {
 } from "react-icons/fa";
 import "./Sidebar.css";
 import baseApi from "../../api/baseApi";
+import Modal from "./Modal";
+import LoginForm from "../login/LoginForm";
 
-const Sidebar = () => {
+const Sidebar = ({ setIsLoginOpen }) => {
   const [user, setUser] = useState(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    axios
-      .get("/user/me")
-      .then((res) => setUser(res.data))
-      .catch((err) => console.error("유저 정보 요청 실패:", err));
-  }, []);
+    const token = localStorage.getItem("accessToken");
 
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    axios
+      .get("/user/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => setUser(res.data))
+      .catch((err) => {
+        console.error("유저 정보 요청 실패:", err);
+        setUser(null); 
+      });
+  }, []);
   const handleLogout = async () => {
     try {
       await baseApi.post(
@@ -48,6 +64,16 @@ const Sidebar = () => {
     { path: "/app/scrapbook", label: "스크랩북", icon: <FaBookmark /> },
     { path: "/app/mypage", label: "MY", icon: <FaUser /> },
   ];
+
+  const handleMenuClick = (path) => {
+    const isLoggedIn = false; 
+    if (!isLoggedIn) {
+      setIsLoginOpen(true); 
+      return;
+    }
+
+    navigate(path);
+  };
 
   return (
     <div className="sidebar">
@@ -76,7 +102,7 @@ const Sidebar = () => {
               className={`menu-item ${
                 location.pathname === item.path ? "active" : ""
               }`}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleMenuClick(item.path)}
             >
               {item.icon}
               <span>{item.label}</span>
@@ -85,11 +111,31 @@ const Sidebar = () => {
         </ul>
       </div>
       <div className="sidebar-bottom">
-        <div className="logout-btn" onClick={handleLogout}>
-          <FaSignOutAlt className="logout-icon" />
-          <span>로그아웃</span>
-        </div>
+        {user ? (
+          // 🔓 로그인 되어 있을 때 → 로그아웃 버튼
+          <div className="logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt className="logout-icon" />
+            <span>로그아웃</span>
+          </div>
+        ) : (
+          // 🔐 로그인 안 되어 있을 때 → 로그인 버튼
+          <div className="logout-btn" onClick={() => setIsLoginModalOpen(true)}>
+            <FaUser className="logout-icon" />
+            <span>로그인</span>
+          </div>
+        )}
       </div>
+      <Modal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      >
+        <LoginForm
+          onSuccess={() => {
+            setIsLoginModalOpen(false);
+            window.location.reload(); // 또는 user 재요청 로직
+          }}
+        />
+      </Modal>
     </div>
   );
 };
