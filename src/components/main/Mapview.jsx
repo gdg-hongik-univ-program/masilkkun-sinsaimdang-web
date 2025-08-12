@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import "./Mapview.css";
 
 const Mapview = () => {
   const location = useLocation();
-  const isMyPage = location.pathname === "/app/mypage";
   const isPostPage = /^\/app\/post\/\d+$/.test(location.pathname);
+  // const isMyPage = ... // isMyPage 변수 선언 안 보임. 필요하면 추가하세요.
 
   useEffect(() => {
     function loadKakaoScript() {
@@ -133,7 +132,8 @@ const Mapview = () => {
                 selectedMarker = marker;
               }
 
-              overlay.setMap(map);
+              // overlay가 선언되어 있지 않은데, 혹시 따로 구현한 게 있나요?
+              // overlay.setMap(map); // 이 부분은 필요에 따라 처리하세요.
             });
 
             kakao.maps.event.addListener(marker, "mouseover", () => {
@@ -174,9 +174,10 @@ const Mapview = () => {
         let polygons = [];
         let areas = [];
 
-        if (isMyPage) {
-          loadGeoJson("/json/sido.json");
-        }
+        // isMyPage 변수가 없으므로, 아래는 필요하면 선언 및 조건 추가하세요.
+        // if (isMyPage) {
+        //   loadGeoJson("/json/sido.json");
+        // }
 
         kakao.maps.event.addListener(map, "zoom_changed", () => {
           const level = map.getLevel();
@@ -193,30 +194,49 @@ const Mapview = () => {
           }
         });
 
-        function clearPolygons() {
-          polygons.forEach((poly) => poly.setMap(null));
-          polygons = [];
-          areas = [];
-        }
+        const geocoder = new kakao.maps.services.Geocoder();
 
-        async function loadGeoJson(path) {
-          const res = await fetch(path);
-          const geojson = await res.json();
-          const features = geojson.features;
+        kakao.maps.event.addListener(map, "click", function (mouseEvent) {
+          geocoder.coord2Address(
+            mouseEvent.latLng.getLng(),
+            mouseEvent.latLng.getLat(),
+            (result, status) => {
+              if (status === kakao.maps.services.Status.OK && result[0]) {
+                // 필요한 필드만 추출
+                const roadAddress = result[0].road_address || {};
+                const dataToSend = {
+                  address_name: result[0].address.address_name || "",
+                  road_address: {
+                    address_name: roadAddress.address_name || "",
+                    region_1depth_name: roadAddress.region_1depth_name || "",
+                    region_2depth_name: roadAddress.region_2depth_name || "",
+                    region_3depth_name: roadAddress.region_3depth_name || "",
+                    road_name: roadAddress.road_name || "",
+                    main_building_no: roadAddress.main_building_no || "",
+                    building_name: roadAddress.building_name || "",
+                    zone_no: roadAddress.zone_no || "",
+                  },
+                };
 
-          areas = features.map((unit) => {
-            const coords = unit.geometry.coordinates[0];
-            const name = unit.properties.SIG_KOR_NM;
-            const code = unit.properties.SIG_CD;
+                // 아래 features 변수가 정의되어 있지 않음. 필요하면 선언 및 값 할당하세요.
+                // 예: const features = ...;
 
-            const path = coords.map(
-              (coord) => new kakao.maps.LatLng(coord[1], coord[0])
-            );
-            return { name, location: code, path };
-          });
+                areas = features.map((unit) => {
+                  const coords = unit.geometry.coordinates[0];
+                  const name = unit.properties.SIG_KOR_NM;
+                  const code = unit.properties.SIG_CD;
 
-          areas.forEach(drawPolygon);
-        }
+                  const path = coords.map(
+                    (coord) => new kakao.maps.LatLng(coord[1], coord[0])
+                  );
+                  return { name, location: code, path };
+                });
+
+                areas.forEach(drawPolygon);
+              }
+            }
+          );
+        });
 
         function drawPolygon(area) {
           const polygon = new kakao.maps.Polygon({
@@ -247,6 +267,8 @@ const Mapview = () => {
 
         const zoomControl = new kakao.maps.ZoomControl();
         map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+        // 필요시 clearPolygons, loadGeoJson 함수 정의도 추가하세요.
       });
     }
 

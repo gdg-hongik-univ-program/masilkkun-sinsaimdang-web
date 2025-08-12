@@ -10,8 +10,7 @@ import {
 } from "react-icons/fa";
 import "./Sidebar.css";
 import baseApi from "../../api/baseApi";
-import Modal from "./Modal";
-import LoginForm from "../login/LoginForm";
+import LoginRegisterModal from "./LoginRegisterModal";
 
 const Sidebar = ({ setIsLoginOpen }) => {
   const [user, setUser] = useState(null);
@@ -36,7 +35,7 @@ const Sidebar = ({ setIsLoginOpen }) => {
       .then((res) => setUser(res.data))
       .catch((err) => {
         console.error("유저 정보 요청 실패:", err);
-        setUser(null); 
+        setUser(null);
       });
   }, []);
   const handleLogout = async () => {
@@ -66,12 +65,11 @@ const Sidebar = ({ setIsLoginOpen }) => {
   ];
 
   const handleMenuClick = (path) => {
-    const isLoggedIn = false; 
-    if (!isLoggedIn) {
-      setIsLoginOpen(true); 
+    const isLoggedin = localStorage.getItem("accessToken");
+    if (!isLoggedin) {
+      setIsLoginOpen(true);
       return;
     }
-
     navigate(path);
   };
 
@@ -85,7 +83,6 @@ const Sidebar = ({ setIsLoginOpen }) => {
         >
           <img src="/logo2.png" alt="logo2" className="logo-img" />
         </div>
-
         <div className="profile-box">
           <img
             src={user?.profileImage}
@@ -112,30 +109,21 @@ const Sidebar = ({ setIsLoginOpen }) => {
       </div>
       <div className="sidebar-bottom">
         {user ? (
-          // 🔓 로그인 되어 있을 때 → 로그아웃 버튼
           <div className="logout-btn" onClick={handleLogout}>
             <FaSignOutAlt className="logout-icon" />
             <span>로그아웃</span>
           </div>
         ) : (
-          // 🔐 로그인 안 되어 있을 때 → 로그인 버튼
           <div className="logout-btn" onClick={() => setIsLoginModalOpen(true)}>
             <FaUser className="logout-icon" />
             <span>로그인</span>
           </div>
         )}
       </div>
-      <Modal
+      <LoginRegisterModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
-      >
-        <LoginForm
-          onSuccess={() => {
-            setIsLoginModalOpen(false);
-            window.location.reload(); // 또는 user 재요청 로직
-          }}
-        />
-      </Modal>
+      />
     </div>
   );
 };
