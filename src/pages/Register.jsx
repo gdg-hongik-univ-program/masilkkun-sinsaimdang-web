@@ -1,26 +1,33 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import "./Register.css";
 import baseApi from "../api/baseApi";
+import "./Register.css";
 
 const Register = () => {
   const navigate = useNavigate();
 
+  // 입력값 상태
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
 
+  // 중복확인 여부
   const [emailChecked, setEmailChecked] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
 
-  const [errorMessage, setErrorMessage] = useState("");
+  // 메시지 상태 분리
+  const [emailMessage, setEmailMessage] = useState("");
+  const [nicknameMessage, setNicknameMessage] = useState("");
+  const [formError, setFormError] = useState("");
 
   const checkEmailDuplication = async () => {
+    setEmailMessage("");
+    setFormError("");
+
     if (!email.includes("@")) {
-      setErrorMessage("올바른 이메일 형식을 입력해주세요.");
+      setEmailMessage("올바른 이메일 형식을 입력해주세요.");
       return;
     }
 
@@ -28,24 +35,28 @@ const Register = () => {
       const res = await baseApi.get("/auth/check-email", {
         params: { email },
       });
+
       const isAvailable = res.data.data.available;
 
       if (isAvailable) {
-        setErrorMessage("사용 가능한 이메일입니다.");
+        setEmailMessage("사용 가능한 이메일입니다.");
         setEmailChecked(true);
       } else {
-        setErrorMessage("이미 사용 중인 이메일입니다.");
+        setEmailMessage("이미 사용 중인 이메일입니다.");
         setEmailChecked(false);
       }
     } catch (error) {
       console.error("이메일 중복 확인 오류:", error);
-      setErrorMessage("이메일 중복 확인 중 오류가 발생했습니다.");
+      setEmailMessage("이메일 중복 확인 중 오류가 발생했습니다.");
     }
   };
 
   const checkNicknameDuplication = async () => {
+    setNicknameMessage("");
+    setFormError("");
+
     if (nickname.length < 2 || nickname.length > 12) {
-      setErrorMessage("닉네임은 2자 이상 12자 이하로 입력해주세요.");
+      setNicknameMessage("닉네임은 2자 이상 12자 이하로 입력해주세요.");
       return;
     }
 
@@ -57,33 +68,34 @@ const Register = () => {
       const isAvailable = res.data.data.available;
 
       if (isAvailable) {
-        setErrorMessage("사용 가능한 닉네임입니다.");
+        setNicknameMessage("사용 가능한 닉네임입니다.");
         setNicknameChecked(true);
       } else {
-        setErrorMessage("이미 사용 중인 닉네임입니다.");
+        setNicknameMessage("이미 사용 중인 닉네임입니다.");
         setNicknameChecked(false);
       }
     } catch (error) {
       console.error("닉네임 중복 확인 오류:", error);
-      setErrorMessage("닉네임 중복 확인 중 오류가 발생했습니다.");
+      setNicknameMessage("닉네임 중복 확인 중 오류가 발생했습니다.");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError("");
 
     if (!email.includes("@")) {
-      setErrorMessage("올바른 이메일 주소를 입력해주세요.");
+      setFormError("올바른 이메일 주소를 입력해주세요.");
       return;
     }
 
     if (!emailChecked) {
-      setErrorMessage("이메일 중복 확인을 먼저 해주세요.");
+      setFormError("이메일 중복 확인을 먼저 해주세요.");
       return;
     }
 
     if (password.length < 4 || password.length > 16) {
-      setErrorMessage(
+      setFormError(
         "비밀번호는 8~20자 이하, 대소문자, 숫자, 특수문자 포함해서 입력해주세요."
       );
       return;
@@ -91,27 +103,27 @@ const Register = () => {
 
     const pwRegex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\W_]).{4,16}$/;
     if (!pwRegex.test(password)) {
-      setErrorMessage("비밀번호는 영어/숫자/특수문자를 포함해야 합니다.");
+      setFormError("비밀번호는 영어/숫자/특수문자를 포함해야 합니다.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage("비밀번호가 일치하지 않습니다.");
+      setFormError("비밀번호가 일치하지 않습니다.");
       return;
     }
 
     if (name.trim().length === 0) {
-      setErrorMessage("이름을 입력해주세요.");
+      setFormError("이름을 입력해주세요.");
       return;
     }
 
     if (nickname.length < 2 || nickname.length > 12) {
-      setErrorMessage("닉네임은 2자 이상 10자 이하로 입력해주세요.");
+      setFormError("닉네임은 2자 이상 12자 이하로 입력해주세요.");
       return;
     }
 
     if (!nicknameChecked) {
-      setErrorMessage("닉네임 중복 확인을 먼저 해주세요.");
+      setFormError("닉네임 중복 확인을 먼저 해주세요.");
       return;
     }
 
@@ -124,15 +136,14 @@ const Register = () => {
       });
 
       if (response.status === 201 || response.status === 200) {
-        setErrorMessage("회원가입이 완료되었습니다.");
         navigate("/");
       }
     } catch (error) {
       console.error("회원가입 실패:", error);
       if (error.response?.data?.message) {
-        setErrorMessage(error.response.data.message);
+        setFormError(error.response.data.message);
       } else {
-        setErrorMessage("회원가입에 실패했습니다. 다시 시도해주세요.");
+        setFormError("회원가입에 실패했습니다. 다시 시도해주세요.");
       }
     }
   };
@@ -141,98 +152,125 @@ const Register = () => {
     <div className="register-container">
       <h2 className="register-title">회원가입</h2>
       <form onSubmit={handleSubmit} className="register-form">
+        {/* 이메일 */}
         <div className="form-group">
           <label className="register-label">이메일</label>
           <div className="input-with-button">
             <input
               type="email"
-              placeholder="이메일을 입력해주세요."
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setEmailChecked(false);
-                setErrorMessage("");
-                s;
+                setEmailMessage("");
+                setFormError("");
               }}
               className="register-input"
+              placeholder="이메일을 입력해주세요."
             />
             <button
               type="button"
-              className="dup-check-button"
               onClick={checkEmailDuplication}
+              className="dup-check-button"
             >
               중복 확인
             </button>
           </div>
+          {emailMessage && (
+            <p
+              className={`message ${
+                emailMessage.includes("가능") ? "valid" : "invalid"
+              }`}
+            >
+              {emailMessage}
+            </p>
+          )}
         </div>
 
+        {/* 비밀번호 */}
         <div className="form-group">
           <label className="register-label">비밀번호</label>
           <input
             type="password"
-            placeholder="8자 이상 20자 이하의 영어 대소문자, 숫자, 특수문자 조합"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              setErrorMessage("");
+              setFormError("");
             }}
             className="register-input"
+            placeholder="8~20자의 영문/숫자/특수문자 포함"
           />
         </div>
 
+        {/* 비밀번호 확인 */}
         <div className="form-group">
           <label className="register-label">비밀번호 확인</label>
           <input
             type="password"
-            placeholder="비밀번호를 다시 입력해주세요."
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
-              setErrorMessage("");
+              setFormError("");
             }}
             className="register-input"
+            placeholder="비밀번호를 다시 입력해주세요."
           />
         </div>
 
+        {/* 이름 */}
         <div className="form-group">
           <label className="register-label">이름</label>
           <input
             type="text"
-            placeholder="이름을 입력해주세요."
             value={name}
             onChange={(e) => {
               setName(e.target.value);
-              setErrorMessage("");
+              setFormError("");
             }}
             className="register-input"
+            placeholder="이름을 입력해주세요."
           />
         </div>
 
+        {/* 닉네임 */}
         <div className="form-group">
           <label className="register-label">닉네임</label>
           <div className="input-with-button">
             <input
               type="text"
-              placeholder="2자 이상 10자 이하"
               value={nickname}
               onChange={(e) => {
                 setNickname(e.target.value);
                 setNicknameChecked(false);
-                setErrorMessage("");
+                setNicknameMessage("");
+                setFormError("");
               }}
               className="register-input"
+              placeholder="2자 이상 12자 이하"
             />
             <button
               type="button"
-              className="dup-check-button"
               onClick={checkNicknameDuplication}
+              className="dup-check-button"
             >
               중복 확인
             </button>
           </div>
+          {nicknameMessage && (
+            <p
+              className={`message ${
+                nicknameMessage.includes("가능") ? "valid" : "invalid"
+              }`}
+            >
+              {nicknameMessage}
+            </p>
+          )}
         </div>
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
 
+        {/* 공통 에러 메시지 */}
+        {formError && <p className="error-message">{formError}</p>}
+
+        {/* 회원가입 버튼 */}
         <button type="submit" className="register-button">
           회원가입
         </button>

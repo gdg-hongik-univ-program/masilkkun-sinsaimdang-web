@@ -1,170 +1,326 @@
 .post-create-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-create-header {
+  background: white;
+  padding: 16px;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.post-create-content {
+  flex: 1;
+  padding: 20px 16px;
+  max-width: 600px;
+  margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  background-color: #ffffff;
-  overflow-y: auto;
-  padding: 10px;
 }
 
-.top-bar {
-  display: flex;
-  justify-content: center;
-  padding: 8px 0;
-  border-radius: 8px;
-}
-
-.post-create-region-select,
 .post-create-title-input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  padding: 16px;
   font-size: 16px;
-}
-
-.post-create-tag-button {
-  align-self: flex-start;
-  background: none;
-  border: 1px solid #a08647;
-  border-radius: 20px;
-  padding: 6px 14px;
-  color: #a08647;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.post-create-place-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.post-create-place-title {
-  font-weight: bold;
-  color: #4b3f2d;
-}
-
-.post-create-step-number {
-  color: #a08647;
-  margin-right: 6px;
-}
-
-.post-create-upload-box {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.post-create-image-box {
-  width: 100%;
-  height: 160px;
-  background-color: #f3f3f3;
-  border: 1px dashed #ccc;
+  border: 1px solid #dee2e6;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.post-create-image-placeholder {
-  color: #aaa;
-  font-size: 14px;
-}
-
-.post-create-description-input {
-  height: 100px;
-  resize: none;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.post-create-register-place {
-  background-color: #a08647;
-  color: white;
-  padding: 10px;
-  font-weight: bold;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.post-create-add-place-button {
-  background: none;
-  border: 1px solid #a08647;
-  border-radius: 20px;
-  padding: 8px 20px;
-  color: #a08647;
-  font-size: 14px;
-  cursor: pointer;
-  align-self: center;
-}
-
-.post-create-bottom-buttons {
-  padding: 16px 24px;
-  display: flex;
-  justify-content: space-between;
-  background-color: #fff;
-}
-
-.post-create-draft-button,
-.post-create-submit-button {
-  width: 48%;
-  padding: 12px;
-  font-weight: bold;
-  font-size: 16px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.post-create-draft-button {
+  margin-bottom: 24px;
   background: white;
-  border: 1px solid #a08647;
-  color: #a08647;
+  box-sizing: border-box;
 }
 
-.post-create-submit-button {
-  background-color: #a08647;
-  border: none;
-  color: white;
+.post-create-title-input:focus {
+  outline: none;
+  border-color: #8b6914;
+  box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.25);
 }
-.post-tags {
+
+.post-create-title-input::placeholder {
+  color: #6c757d;
+}
+
+/* 태그 선택 */
+.tag-select-container {
   display: flex;
   gap: 8px;
+  margin-bottom: 32px;
   flex-wrap: wrap;
-  margin: 8px 0;
 }
 
-.tag-item {
-  color: #555;
-  background-color: #f2f2f2;
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-size: 13px;
-}
-
-.tag-select-wrapper {
-  display: flex;
-  gap: 8px;
-  margin: 4px 0;
-}
-
-.tag-select-button {
-  padding: 6px 14px;
+.tag-select-chip {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  background: white;
+  color: #6c757d;
   font-size: 14px;
-  border-radius: 16px;
-  background-color: white;
-  color: #a08647;
-  border: 1px solid #a08647;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.tag-select-button.selected {
-  background-color: #a08647;
+.tag-select-chip:hover {
+  border-color: #8b6914;
+}
+
+.tag-select-chip.selected {
+  background: #8b6914;
   color: white;
+  border-color: #8b6914;
+}
+
+/* 장소 섹션 */
+.place-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid #e9ecef;
+}
+
+.place-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.place-number {
+  width: 24px;
+  height: 24px;
+  background: #8b6914;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.place-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.place-remove-btn {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.place-remove-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.place-name-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.place-name-input:focus {
+  outline: none;
+  border-color: #8b6914;
+  box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.25);
+}
+
+.location-select-btn {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: 2px solid #8b6914;
+  border-radius: 8px;
+  color: #8b6914;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.location-select-btn:hover {
+  background: #8b6914;
+  color: white;
+}
+
+.selected-address {
+  font-size: 14px;
+  color: #28a745;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f8fff9;
+  border-radius: 6px;
+  border-left: 3px solid #28a745;
+}
+
+/* 이미지 업로드 */
+.image-upload-section {
+  margin-bottom: 16px;
+}
+
+.image-upload-label {
+  display: block;
+  cursor: pointer;
+}
+
+.image-upload-placeholder {
+  width: 100%;
+  height: 120px;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.image-upload-placeholder:hover {
+  border-color: #8b6914;
+  color: #8b6914;
+}
+
+.image-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.uploaded-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.place-description-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.place-description-input:focus {
+  outline: none;
+  border-color: #8b6914;
+  box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.25);
+}
+
+/* 장소 추가 버튼 */
+.add-place-btn {
+  width: 100%;
+  padding: 16px;
+  background: white;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  color: #8b6914;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 24px;
+}
+
+.add-place-btn:hover {
+  border-color: #8b6914;
+  background: #faf9f6;
+}
+
+/* 하단 버튼들 */
+.post-create-footer {
+  background: white;
+  padding: 16px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 12px;
+  position: sticky;
+  bottom: 0;
+}
+
+.temp-save-btn,
+.submit-btn {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.temp-save-btn {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.temp-save-btn:hover {
+  background: #e9ecef;
+}
+
+.submit-btn {
+  background: #8b6914;
+  color: white;
+}
+
+.submit-btn:hover {
+  background: #6b4f0f;
+}
+
+.submit-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .post-create-content {
+    padding: 16px 12px;
+  }
+
+  .place-section {
+    padding: 16px;
+  }
+
+  .post-create-footer {
+    flex-direction: column;
+  }
+
+  .temp-save-btn,
+  .submit-btn {
+    flex: none;
+  }
 }

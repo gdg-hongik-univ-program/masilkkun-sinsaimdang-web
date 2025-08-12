@@ -16,7 +16,7 @@ const PostListPage = ({
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await baseApi.get("/api/articles", {
+        const res = await baseApi.get("/articles", {
           params: {
             tag: selectedCategory,
             region: region,
