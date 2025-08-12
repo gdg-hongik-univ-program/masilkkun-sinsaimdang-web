@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./Region.css"; // CSS 따로 작성
+import "./Region.css";
 
 const options = [
   "서울",

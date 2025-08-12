@@ -16,7 +16,7 @@ const PostCard = ({ post }) => {
   };
 
   const toggleLike = (e) => {
-    e.stopPropagation(); // 카드 클릭 방지
+    e.stopPropagation();
     setLiked((prev) => !prev);
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
@@ -27,7 +27,6 @@ const PostCard = ({ post }) => {
     setBookmarkCount((prev) => (bookmarked ? prev - 1 : prev + 1));
   };
 
-  // 태그 변환 (영어 -> 한글)
   const tagMap = {
     RESTAURANT: "맛집",
     CAFE: "카페",
@@ -40,17 +39,15 @@ const PostCard = ({ post }) => {
       onClick={handleCardClick}
       style={{ cursor: "pointer" }}
     >
-      {/* 이미지 */}
       <div className="post-images">
         <img src={post.photos?.[0]} alt="이미지1" className="post-image" />
         <img src={post.photos?.[1]} alt="이미지2" className="post-image" />
       </div>
 
       <div className="post-info">
-        {/* 작성자 정보 */}
         <div className="profile-section">
           <img
-            src="/default-profile.png" // 백엔드에 프로필 이미지가 없으므로 기본 이미지
+            src="/default-profile.png" // 백엔드에 프로필 이미지가 없어서 기본 이미지 설정..
             alt="프로필"
             className="profile-img"
           />
@@ -62,10 +59,8 @@ const PostCard = ({ post }) => {
           </div>
         </div>
 
-        {/* 제목 또는 지역 */}
         <p className="post-location">{post.title}</p>
 
-        {/* 태그 */}
         <div className="post-tags">
           {post.tags?.map((tag, idx) => (
             <span key={idx} className="tag">
@@ -74,7 +69,6 @@ const PostCard = ({ post }) => {
           ))}
         </div>
 
-        {/* 좋아요 / 스크랩 */}
         <div className="post-actions">
           <div className="action" onClick={toggleBookmark}>
             <FaBookmark color={bookmarked ? "#000" : "#aaa"} />

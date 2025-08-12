@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import PostCard from "./PostCard";
-import baseApi from "../../api/baseApi"; // ✅ API 모듈 불러오기
+import baseApi from "../../api/baseApi";
 import "./PostList.css";
 
 const PostList = ({ region, category, sortOrder }) => {
@@ -13,7 +13,7 @@ const PostList = ({ region, category, sortOrder }) => {
           params: { region, category, sort: sortOrder },
         });
 
-        const data = res.data.data.content; // ✅ API 응답 구조에 따라 조정
+        const data = res.data.data.content;
         if (Array.isArray(data)) {
           setPosts(data);
         } else {

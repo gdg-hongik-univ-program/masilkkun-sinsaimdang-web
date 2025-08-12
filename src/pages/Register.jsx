@@ -13,11 +13,9 @@ const Register = ({ onSwitch }) => {
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
 
-  // 중복 확인 여부 상태
   const [emailChecked, setEmailChecked] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
 
-  // 이메일 중복 확인
   const checkEmailDuplication = async () => {
     if (!email.includes("@")) {
       alert("올바른 이메일 형식을 입력해주세요.");
@@ -43,7 +41,6 @@ const Register = ({ onSwitch }) => {
     }
   };
 
-  // 닉네임 중복 확인
   const checkNicknameDuplication = async () => {
     if (nickname.length < 2 || nickname.length > 12) {
       alert("닉네임은 2자 이상 10자 이하로 입력해주세요.");
@@ -142,7 +139,6 @@ const Register = ({ onSwitch }) => {
     <div className="register-container">
       <h2 className="register-title">회원가입</h2>
       <form onSubmit={handleSubmit} className="register-form">
-        {/* 이메일 */}
         <div className="form-group">
           <label className="register-label">이메일</label>
           <div className="input-with-button">
@@ -152,7 +148,7 @@ const Register = ({ onSwitch }) => {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setEmailChecked(false); // 수정 시 다시 확인 필요
+                setEmailChecked(false);
               }}
               className="register-input"
             />
@@ -166,7 +162,6 @@ const Register = ({ onSwitch }) => {
           </div>
         </div>
 
-        {/* 비밀번호 */}
         <div className="form-group">
           <label className="register-label">비밀번호</label>
           <input
@@ -178,7 +173,6 @@ const Register = ({ onSwitch }) => {
           />
         </div>
 
-        {/* 비밀번호 확인 */}
         <div className="form-group">
           <label className="register-label">비밀번호 확인</label>
           <input
@@ -190,7 +184,6 @@ const Register = ({ onSwitch }) => {
           />
         </div>
 
-        {/* 이름 */}
         <div className="form-group">
           <label className="register-label">이름</label>
           <input
@@ -202,7 +195,6 @@ const Register = ({ onSwitch }) => {
           />
         </div>
 
-        {/* 닉네임 */}
         <div className="form-group">
           <label className="register-label">닉네임</label>
           <div className="input-with-button">
@@ -212,7 +204,7 @@ const Register = ({ onSwitch }) => {
               value={nickname}
               onChange={(e) => {
                 setNickname(e.target.value);
-                setNicknameChecked(false); // 수정 시 다시 확인 필요
+                setNicknameChecked(false);
               }}
               className="register-input"
             />
@@ -226,7 +218,6 @@ const Register = ({ onSwitch }) => {
           </div>
         </div>
 
-        {/* 제출 */}
         <button type="submit" className="register-button">
           회원가입
         </button>

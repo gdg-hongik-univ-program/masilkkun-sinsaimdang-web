@@ -77,7 +77,7 @@ const PostCoursePage = () => {
       try {
         setLoading(true);
         const response = await baseApi.get(`/articles/${id}`);
-        setPost(response.data.data); // ✅ 응답 구조에 따라 data 안에서 꺼냄
+        setPost(response.data.data);
       } catch (err) {
         console.error("게시글 조회 실패", err);
         setError("게시글을 불러오는 데 실패했습니다.");
@@ -95,14 +95,12 @@ const PostCoursePage = () => {
 
   return (
     <div className="post-course-page">
-      {/* 상단 헤더 */}
       <div className="course-header">
         <h2>{post.region}</h2>
         <h1>{post.title}</h1>
         <p className="date">{post.createdAt?.slice(0, 10)}</p>
       </div>
 
-      {/* 프로필 */}
       <div className="profile-section">
         <img
           className="profile-img"
@@ -118,7 +116,6 @@ const PostCoursePage = () => {
         <button className="follow-btn">팔로우</button>
       </div>
 
-      {/* 좋아요 / 북마크 */}
       <div className="stats">
         <div className="stat-box">
           <span>🔖</span>
@@ -130,7 +127,6 @@ const PostCoursePage = () => {
         </div>
       </div>
 
-      {/* 태그 */}
       <div className="tags">
         {post.tags?.map((tag, i) => (
           <button key={i} className="tag-btn">
@@ -139,7 +135,6 @@ const PostCoursePage = () => {
         ))}
       </div>
 
-      {/* 요약 코스 목록 */}
       <div className="course-summary">
         {post.places?.map((place, index) => (
           <div className="course-step" key={index}>
@@ -152,7 +147,6 @@ const PostCoursePage = () => {
         ))}
       </div>
 
-      {/* 상세 코스 설명 */}
       <div className="course-detail">
         {post.places?.map((place, index) => (
           <div className="course-detail-item" key={index}>

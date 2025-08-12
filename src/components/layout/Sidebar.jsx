@@ -35,7 +35,7 @@ const Sidebar = ({ setIsLoginOpen }) => {
       .then((res) => setUser(res.data))
       .catch((err) => {
         console.error("유저 정보 요청 실패:", err);
-        setUser(null); // 실패하면 null로 설정
+        setUser(null);
       });
   }, []);
   const handleLogout = async () => {
@@ -107,7 +107,6 @@ const Sidebar = ({ setIsLoginOpen }) => {
           ))}
         </ul>
       </div>
-
       <div className="sidebar-bottom">
         {user ? (
           <div className="logout-btn" onClick={handleLogout}>

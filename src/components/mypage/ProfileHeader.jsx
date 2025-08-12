@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import baseApi from "../../api/baseApi";
 import "./ProfileHeader.css";
 
-// // mockdata로 지워야 할 부분이다.
+// // mockdata로 지워야 할 부분!!
 // const mockUser = {
 //   nickname: "개굴히",
 //   profileImageUrl: "/img/profile.png",

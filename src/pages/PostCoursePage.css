@@ -8,7 +8,6 @@
   overflow-x: hidden;
 }
 
-/* ===== 헤더 영역 ===== */
 .course-header {
   text-align: left;
   margin-bottom: 32px;
@@ -32,7 +31,6 @@
   color: #aaa;
 }
 
-/* ===== 프로필 영역 (수정됨) ===== */
 .profile-section {
   display: flex;
   align-items: center;
@@ -59,7 +57,7 @@
 .username {
   font-weight: 600;
   font-size: 15px;
-  color: #2e2e2e; /* ✅ 닉네임이 흰색으로 보이던 문제 해결 */
+  color: #2e2e2e;
   white-space: nowrap;
 }
 
@@ -74,7 +72,6 @@
   white-space: nowrap;
 }
 
-/* ===== 좋아요 / 북마크 ===== */
 .stats {
   display: flex;
   width: 240px;
@@ -102,7 +99,6 @@
   border-left: 1px solid #ddd;
 }
 
-/* ===== 태그 버튼 ===== */
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -120,7 +116,6 @@
   font-weight: 500;
 }
 
-/* ===== 코스 요약 리스트 ===== */
 .course-summary {
   border-top: 1px solid #f0f0f0;
   border-bottom: 1px solid #f0f0f0;
@@ -162,7 +157,6 @@
   color: #888;
 }
 
-/* ===== 상세 설명 구간 ===== */
 .course-detail {
   margin-top: 40px;
   padding-top: 16px;
@@ -174,7 +168,7 @@
 }
 
 .course-detail-item {
-  margin-bottom: 64px; /* 👉 설명과 다음 장소 사이 충분한 간격 */
+  margin-bottom: 64px;
 }
 
 .detail-title {
