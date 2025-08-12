@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Modal from "./Modal";
 import LoginForm from "../login/LoginForm";
 import Register from "../../pages/Register";
 
 const LoginRegisterModal = ({ isOpen, onClose }) => {
-  const [mode, setMode] = useState("login"); // 'login' or 'register'
+  const [mode, setMode] = useState("login");
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
       setMode("login");
     }
   }, [isOpen]);
@@ -15,7 +15,7 @@ const LoginRegisterModal = ({ isOpen, onClose }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      className={mode === "register" ? "modal-register" : "modeal-default"}
+      className={mode === "register" ? "modal-register" : "modal-default"}
     >
       {mode === "login" ? (
         <LoginForm onSwitch={() => setMode("register")} />

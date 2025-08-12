@@ -10,8 +10,7 @@ import {
 } from "react-icons/fa";
 import "./Sidebar.css";
 import baseApi from "../../api/baseApi";
-import Modal from "./Modal";
-import LoginForm from "../login/LoginForm";
+import LoginRegisterModal from "./LoginRegisterModal";
 
 const Sidebar = ({ setIsLoginOpen }) => {
   const [user, setUser] = useState(null);
@@ -66,20 +65,17 @@ const Sidebar = ({ setIsLoginOpen }) => {
   ];
 
   const handleMenuClick = (path) => {
-    const isLoggedIn = false; // 또는 localStorage.getItem("token") 등
-    if (!isLoggedIn) {
-      setIsLoginOpen(true); // ✅ 로그인 안 되어 있으면 모달 열기
+    const isLoggedin = localStorage.getItem("accessToken");
+    if (!isLoggedin) {
+      setIsLoginOpen(true);
       return;
     }
-
     navigate(path);
   };
 
   return (
     <div className="sidebar">
-      {/* 상단: 로고, 프로필, 메뉴 */}
       <div className="sidebar-top">
-        {/* 로고 */}
         <div
           className="logo-box"
           onClick={() => navigate("/app/postlist")}
@@ -87,8 +83,6 @@ const Sidebar = ({ setIsLoginOpen }) => {
         >
           <img src="/logo2.png" alt="logo2" className="logo-img" />
         </div>
-
-        {/* 프로필 박스 */}
         <div className="profile-box">
           <img
             src={user?.profileImage}
@@ -98,7 +92,6 @@ const Sidebar = ({ setIsLoginOpen }) => {
           <p className="username">{user?.name}님</p>
         </div>
 
-        {/* 메뉴 */}
         <ul className="menu">
           {menuItems.map((item) => (
             <li
@@ -115,33 +108,23 @@ const Sidebar = ({ setIsLoginOpen }) => {
         </ul>
       </div>
 
-      {/* 하단: 로그인 or 로그아웃 */}
       <div className="sidebar-bottom">
         {user ? (
-          // 🔓 로그인 되어 있을 때 → 로그아웃 버튼
           <div className="logout-btn" onClick={handleLogout}>
             <FaSignOutAlt className="logout-icon" />
             <span>로그아웃</span>
           </div>
         ) : (
-          // 🔐 로그인 안 되어 있을 때 → 로그인 버튼
           <div className="logout-btn" onClick={() => setIsLoginModalOpen(true)}>
             <FaUser className="logout-icon" />
             <span>로그인</span>
           </div>
         )}
       </div>
-      <Modal
+      <LoginRegisterModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
-      >
-        <LoginForm
-          onSuccess={() => {
-            setIsLoginModalOpen(false);
-            window.location.reload(); // 또는 user 재요청 로직
-          }}
-        />
-      </Modal>
+      />
     </div>
   );
 };
