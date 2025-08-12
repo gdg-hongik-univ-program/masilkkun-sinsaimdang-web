@@ -82,6 +82,11 @@ input {
   color: inherit;
   cursor: default;
 }
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
 
 .plain-button {
   color: #555; /* 글자 색 (원하는 색상) */

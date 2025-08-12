@@ -90,3 +90,9 @@
 .back-to-login:hover {
   text-decoration: none;
 }
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 12px;
+  text-align: center;
+}
