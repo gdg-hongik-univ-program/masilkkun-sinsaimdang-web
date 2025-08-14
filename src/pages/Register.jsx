@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import baseApi from "../api/baseApi";
 import "./Register.css";
@@ -141,6 +141,7 @@ const Register = ({ onSwitch }) => {
       }
     } catch (error) {
       console.error("회원가입 실패:", error);
+      console.log(error.response.data); // 에러 이유 출력
       if (error.response?.data?.message) {
         setFormError(error.response.data.message);
       } else {
@@ -193,16 +194,13 @@ const Register = ({ onSwitch }) => {
           <label className="register-label">비밀번호</label>
           <input
             type="password"
-
             placeholder="비밀번호는 8~20자 이하, 대소문자, 숫자, 특수문자 포함"
-
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
               setFormError("");
             }}
             className="register-input"
-            placeholder="8~20자의 영문/숫자/특수문자 포함"
           />
         </div>
 

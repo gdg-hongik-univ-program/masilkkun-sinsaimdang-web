@@ -6,7 +6,6 @@ import baseApi from "../api/baseApi";
 
 const PostListPage = ({
   region,
-  setRegion,
   selectedCategory,
   setSelectedCategory,
   sortOrder,
@@ -26,6 +25,7 @@ const PostListPage = ({
         setPosts(res.data.data.content); // API 응답 형식에 따라 수정
       } catch (err) {
         console.error("게시글 로딩 오류:", err);
+        console.log(err.response.data); // 에러 이유 출력
       }
     };
 

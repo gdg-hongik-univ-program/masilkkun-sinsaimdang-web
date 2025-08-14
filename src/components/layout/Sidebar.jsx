@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -9,53 +9,10 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 import "./Sidebar.css";
-import baseApi from "../../api/baseApi";
-import LoginRegisterModal from "./LoginRegisterModal";
-
-const Sidebar = ({ setIsLoginOpen }) => {
+const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   const [user, setUser] = useState(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-
-    if (!token) {
-      setUser(null);
-      return;
-    }
-
-    axios
-      .get("/user/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => setUser(res.data))
-      .catch((err) => {
-        console.error("유저 정보 요청 실패:", err);
-        setUser(null);
-      });
-  }, []);
-  const handleLogout = async () => {
-    try {
-      await baseApi.post(
-        "/auth/logout",
-        { email: user.email },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
-    } catch (err) {
-      console.error("로그아웃 실패:", err);
-    } finally {
-      localStorage.removeItem("accessToken");
-      navigate("/");
-    }
-  };
 
   const menuItems = [
     { path: "/app/create", label: "작성", icon: <FaPen /> },
@@ -64,10 +21,40 @@ const Sidebar = ({ setIsLoginOpen }) => {
     { path: "/app/mypage", label: "MY", icon: <FaUser /> },
   ];
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (isLoggedIn && token) {
+        // 로그인 상태일 때만 유저 정보를 가져옴
+        try {
+          const res = await axios.get("/user/me", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setUser(res.data);
+        } catch (err) {
+          console.error("유저 정보 요청 실패:", err);
+          setIsLoggedIn(false); // 토큰이 유효하지 않으면 로그아웃 처리
+          localStorage.removeItem("accessToken");
+        }
+      } else {
+        setUser(null);
+      }
+    };
+    fetchUser();
+  }, [isLoggedIn]); // 👈 isLoggedIn 상태가 변할 때마다 useEffect 실행!
+
+  const handleLogout = () => {
+    // ... 로그아웃 로직 (기존 코드)
+    localStorage.removeItem("accessToken");
+    setIsLoggedIn(false); // 로그아웃 후 상태 업데이트
+    navigate("/");
+  };
+
   const handleMenuClick = (path) => {
-    const isLoggedin = localStorage.getItem("accessToken");
-    if (!isLoggedin) {
-      setIsLoginOpen(true);
+    if (!isLoggedIn) {
+      setIsLoginModalOpen(true);
       return;
     }
     navigate(path);
@@ -108,7 +95,7 @@ const Sidebar = ({ setIsLoginOpen }) => {
         </ul>
       </div>
       <div className="sidebar-bottom">
-        {user ? (
+        {isLoggedIn ? ( // 👈 isLoggedIn 상태에 따라 UI를 조건부 렌더링
           <div className="logout-btn" onClick={handleLogout}>
             <FaSignOutAlt className="logout-icon" />
             <span>로그아웃</span>
@@ -120,11 +107,9 @@ const Sidebar = ({ setIsLoginOpen }) => {
           </div>
         )}
       </div>
-      <LoginRegisterModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-      />
+      {/* LoginRegisterModal은 App.js로 옮겼으므로 여기서는 제거 */}
     </div>
   );
 };
+
 export default Sidebar;

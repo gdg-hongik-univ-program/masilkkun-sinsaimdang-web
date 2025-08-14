@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import baseApi from "../../api/baseApi";
 
-const LoginForm = ({ onSwitch }) => {
+const LoginForm = ({ onSwitch, onLoginSuccess }) => {
+  // onLoginSuccess prop을 받음
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [isChecked, setIsChecked] = useState(false);
@@ -42,7 +43,11 @@ const LoginForm = ({ onSwitch }) => {
         sessionStorage.setItem("accessToken", accessToken);
       }
 
-      nav("/app/postlist");
+      // ⭐⭐⭐ 중요: 로그인 성공 시 부모 컴포넌트의 상태를 업데이트하는 함수 호출 ⭐⭐⭐
+      // 이 함수가 App.js의 handleLoginSuccess를 호출하여 isLoginModalOpen을 false로, isLoggedIn을 true로 변경합니다.
+      onLoginSuccess();
+
+      nav("/app/postlist"); // 페이지 이동
     } catch (error) {
       console.error("로그인 실패:", error);
       setErrorMessage(
@@ -88,10 +93,13 @@ const LoginForm = ({ onSwitch }) => {
               />
               로그인 유지
             </label>
+            {/* alert() 대신 사용자 정의 모달 사용 권장 */}
             <label
               type="button"
               className="plane-link"
-              onClick={() => alert("아이디/비밀번호 찾기는 추후 구현")}
+              onClick={() => {
+                /* alert("아이디/비밀번호 찾기는 추후 구현") */
+              }}
             >
               아이디/비밀번호 찾기
             </label>

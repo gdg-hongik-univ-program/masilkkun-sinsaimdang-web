@@ -3,7 +3,7 @@ import Modal from "./Modal";
 import LoginForm from "../login/LoginForm";
 import Register from "../../pages/Register";
 
-const LoginRegisterModal = ({ isOpen, onClose }) => {
+const LoginRegisterModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [mode, setMode] = useState("login");
   useEffect(() => {
     if (!isOpen) {
@@ -18,7 +18,10 @@ const LoginRegisterModal = ({ isOpen, onClose }) => {
       className={mode === "register" ? "modal-register" : "modal-default"}
     >
       {mode === "login" ? (
-        <LoginForm onSwitch={() => setMode("register")} />
+        <LoginForm
+          onSwitch={() => setMode("register")}
+          onLoginSuccess={onLoginSuccess}
+        />
       ) : (
         <Register onSwitch={() => setMode("login")} />
       )}
