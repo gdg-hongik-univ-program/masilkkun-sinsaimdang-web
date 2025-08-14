@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import "./Mapview.css";
 
 const Mapview = () => {
   const location = useLocation();
@@ -194,6 +193,7 @@ const Mapview = () => {
         };
       } else {
         // 기존 코드 유지 (게시글 보기 페이지, 마이페이지 등)
+
         const mapTypeControl = new kakao.maps.MapTypeControl();
         newMap.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
 
@@ -203,6 +203,7 @@ const Mapview = () => {
         // ... (마커, 폴리라인, 폴리곤 로직은 여기에 그대로)
       }
     };
+
 
     initializeMap();
 
