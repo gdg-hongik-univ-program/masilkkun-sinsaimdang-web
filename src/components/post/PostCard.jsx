@@ -12,17 +12,18 @@ const PostCard = ({ post }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    navigate(`/app/post/${post.id}`);
+    // PostCoursePage로 이동
+    navigate(`/post/${post.id}`);
   };
 
   const toggleLike = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // 카드 클릭 이벤트 방지
     setLiked((prev) => !prev);
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
   const toggleBookmark = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // 카드 클릭 이벤트 방지
     setBookmarked((prev) => !prev);
     setBookmarkCount((prev) => (bookmarked ? prev - 1 : prev + 1));
   };
@@ -33,33 +34,47 @@ const PostCard = ({ post }) => {
     TRAVEL: "여행지",
   };
 
+  // 날짜 포맷팅 함수
+  const formatDate = (dateString) => {
+    if (!dateString) return "날짜 없음";
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}년 ${month}월 ${day}일`;
+  };
+
   return (
-    <div
-      className="post-card"
-      onClick={handleCardClick}
-      style={{ cursor: "pointer" }}
-    >
+    <div className="post-card" onClick={handleCardClick}>
       <div className="post-images">
-        <img src={post.photos?.[0]} alt="이미지1" className="post-image" />
-        <img src={post.photos?.[1]} alt="이미지2" className="post-image" />
+        <img
+          src={post.photos?.[0] || "/default-image.png"}
+          alt="메인 이미지"
+          className="post-image main-image"
+        />
+        {post.photos?.[1] && (
+          <img
+            src={post.photos[1]}
+            alt="서브 이미지"
+            className="post-image sub-image"
+          />
+        )}
       </div>
 
       <div className="post-info">
         <div className="profile-section">
           <img
-            src="/default-profile.png" // 백엔드에 프로필 이미지가 없어서 기본 이미지 설정..
+            src={post.author?.profileImage || "/default-profile.png"}
             alt="프로필"
             className="profile-img"
           />
           <div className="user-info">
             <p className="user-name">{post.author?.nickname || "알 수 없음"}</p>
-            <p className="post-date">
-              {post.createdAt?.slice(0, 10) || "날짜 없음"}
-            </p>
+            <p className="post-date">{formatDate(post.createdAt)}</p>
           </div>
         </div>
 
-        <p className="post-location">{post.title}</p>
+        <h3 className="post-location">{post.title}</h3>
 
         <div className="post-tags">
           {post.tags?.map((tag, idx) => (
@@ -70,14 +85,22 @@ const PostCard = ({ post }) => {
         </div>
 
         <div className="post-actions">
-          <div className="action" onClick={toggleBookmark}>
-            <FaBookmark color={bookmarked ? "#000" : "#aaa"} />
+          <button
+            className={`action-btn bookmark-btn ${bookmarked ? "active" : ""}`}
+            onClick={toggleBookmark}
+            aria-label="북마크"
+          >
+            <FaBookmark />
             <span>{bookmarkCount.toLocaleString()}</span>
-          </div>
-          <div className="action" onClick={toggleLike}>
-            <FaHeart color={liked ? "red" : "#aaa"} />
+          </button>
+          <button
+            className={`action-btn like-btn ${liked ? "active" : ""}`}
+            onClick={toggleLike}
+            aria-label="좋아요"
+          >
+            <FaHeart />
             <span>{likeCount.toLocaleString()}</span>
-          </div>
+          </button>
         </div>
       </div>
     </div>
