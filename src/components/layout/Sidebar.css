@@ -1,88 +1,81 @@
-/* ===== Sidebar Container ===== */
-.sidebar {
-  width: 70px;
-  height: 100vh;
-  background-color: #9a7937;
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 100;
-  padding: 16px 0;
+/* 전체 박스 모델 초기화 */
+* {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
-/* ===== Top Section ===== */
-.sidebar-top {
-  flex: 1;
+.sidebar {
+  width: 70px;
+  min-width: 70px; /* 최소 너비 보장 */
+  height: 100vh;
+  background-color: #fff;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start; /* space-between 대신 flex-start 사용 */
   align-items: center;
-  gap: 8px;
+  padding: 0; /* 패딩 제거하여 레이아웃 안정화 */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  position: fixed; /* 또는 relative - 필요에 따라 조정 */
+  left: 0;
+  top: 0;
 }
 
-/* ===== Logo ===== */
 .logo-box {
+  width: 100%;
+  padding: 16px 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 50px;
-  height: 50px;
-  margin-bottom: 16px;
-  border-radius: 12px;
-  background-color: rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
 }
 
-.logo-box:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-}
-
-.logo-img {
-  height: 32px;
-  width: 32px;
+.logo-box img {
+  width: 40px; /* 크기 조정 */
+  height: 40px;
   object-fit: contain;
 }
 
-/* ===== Profile Section ===== */
 .profile-box {
+  width: 100%;
+  height: 100px;
+  background-color: #a08944;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 24px;
-  padding: 8px 0;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0; /* 크기 고정 */
 }
 
 .sidebar-profile-img {
-  width: 50px;
-  height: 50px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.2s ease;
-}
-
-.sidebar-profile-img:hover {
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: scale(1.1);
+  background-color: #ddd; /* 이미지 로드 실패 시 기본 배경 */
 }
 
 .username {
-  display: none; /* 세로 모드에서는 이름 숨김 */
+  color: white;
+  font-size: 12px; /* 크기 조정 */
+  font-weight: 500;
+  text-align: center;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* ===== Menu ===== */
 .menu {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 20px 0 0 0; /* 상단 마진만 유지 */
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: center;
+  gap: 0; /* gap 제거 */
   width: 100%;
+  align-items: center;
+  flex: 1; /* 남은 공간 모두 차지 */
 }
 
 .menu-item {
@@ -90,45 +83,42 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
+  font-size: 11px; /* 폰트 크기 조정 */
   cursor: pointer;
+  color: #666;
+  padding: 14px 8px; /* 패딩 조정 */
+  width: 100%;
   transition: all 0.2s ease;
-  color: rgba(255, 255, 255, 0.7);
-  position: relative;
-  background-color: transparent;
+  border-radius: 0;
+  text-align: center;
+  min-height: 50px; /* 최소 높이 설정 */
+  gap: 4px;
 }
 
 .menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  transform: scale(1.1);
-}
-
-.menu-item.active {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  background-color: #f5f5f5;
+  color: #a08944;
 }
 
 .menu-item svg {
-  font-size: 20px;
-  margin-bottom: 2px;
+  width: 18px; /* 고정 크기 */
+  height: 18px;
+  flex-shrink: 0;
 }
 
-.menu-item span {
-  font-size: 10px;
-  font-weight: 500;
-  text-align: center;
-  line-height: 1;
+.menu-item.active {
+  background-color: #a08944;
+  color: white;
+  font-weight: 600;
 }
 
-/* ===== Bottom Section ===== */
 .sidebar-bottom {
-  padding: 16px 0;
+  width: 100%;
   display: flex;
   justify-content: center;
+  padding: 16px 0;
+  margin-top: auto; /* 하단으로 밀어내기 */
+  flex-shrink: 0; /* 크기 고정 */
 }
 
 .logout-btn {
@@ -136,67 +126,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
+  color: #999;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: rgba(255, 255, 255, 0.7);
-  background-color: transparent;
-  border: none;
+  font-size: 11px;
+  transition: color 0.2s ease;
+  padding: 8px;
+  gap: 4px;
 }
 
 .logout-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  transform: scale(1.1);
+  color: #e74c3c;
 }
 
 .logout-icon {
-  font-size: 20px;
-  margin-bottom: 2px;
-}
-
-.logout-btn span {
-  font-size: 10px;
-  font-weight: 500;
-  text-align: center;
-  line-height: 1;
-}
-
-/* ===== Tooltip (Optional - 호버 시 라벨 표시) ===== */
-.menu-item::after,
-.logout-btn::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 70px;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  z-index: 1000;
-}
-
-.menu-item:hover::after,
-.logout-btn:hover::after {
-  opacity: 1;
-}
-
-/* ===== Responsive - 모바일에서도 동일한 크기 유지 ===== */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 70px;
-  }
-}
-
-/* ===== 메인 컨텐츠 영역을 위한 여백 ===== */
-body {
-  margin-left: 70px;
+  width: 18px; /* 고정 크기 */
+  height: 18px;
+  flex-shrink: 0;
 }

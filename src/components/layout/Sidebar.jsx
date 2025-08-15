@@ -18,25 +18,25 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
 
   const menuItems = [
     {
-      path: "/app/create",
+      path: "/create", // /app/create → /create 수정
       label: "작성",
       icon: <FaPen />,
       tooltip: "게시글 작성",
     },
     {
-      path: "/app/certification",
+      path: "/certification", // /app/certification → /certification 수정
       label: "인증",
       icon: <FaCheckCircle />,
       tooltip: "인증하기",
     },
     {
-      path: "/app/scrapbook",
+      path: "/scrapbook", // /app/scrapbook → /scrapbook 수정
       label: "스크랩북",
       icon: <FaBookmark />,
       tooltip: "스크랩북",
     },
     {
-      path: "/app/mypage",
+      path: "/mypage", // /app/mypage → /mypage 수정
       label: "MY",
       icon: <FaUser />,
       tooltip: "마이페이지",
@@ -95,10 +95,15 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   };
 
   const handleMenuClick = (path) => {
+    console.log("메뉴 클릭:", path, "로그인 상태:", isLoggedIn); // 디버깅용 로그 추가
+
     if (!isLoggedIn) {
+      console.log("로그인 모달 열기"); // 디버깅용 로그 추가
       setIsLoginModalOpen(true);
       return;
     }
+
+    console.log("페이지 이동:", path); // 디버깅용 로그 추가
     navigate(path);
   };
 
@@ -107,7 +112,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
       <div className="sidebar-top">
         <div
           className="logo-box"
-          onClick={() => navigate("/app/postlist")}
+          onClick={() => navigate("/postlist")} // /app/postlist → /postlist 수정
           style={{ cursor: "pointer" }}
         >
           <img src="/logo2.png" alt="logo2" className="logo-img" />
