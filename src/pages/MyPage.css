@@ -102,15 +102,15 @@
 .myp-edit-posts-btn {
   padding: 6px 16px;
   font-size: 13px;
-  border: 1px solid #8b4513;
+  border: 1px solid #9a7937;
   border-radius: 16px;
-  background: #8b4513;
+  background: #9a7937;
   cursor: pointer;
   color: #fff;
 }
 
 .myp-edit-posts-btn:hover {
-  background-color: #a0522d;
+  background-color: #9a7937;
 }
 
 /* ===== Delete Mode ===== */
@@ -136,15 +136,15 @@
 .myp-delete-btn {
   padding: 6px 16px;
   font-size: 13px;
-  border: 1px solid #8b4513;
+  border: 1px solid #9a7937;
   border-radius: 16px;
-  background: #8b4513;
+  background: #9a7937;
   cursor: pointer;
   color: #fff;
 }
 
 .myp-delete-btn:hover:not(:disabled) {
-  background-color: #a0522d;
+  background-color: #9a7937;
 }
 
 .myp-delete-btn:disabled {
@@ -170,7 +170,7 @@
 }
 
 .myp-card.selected {
-  border-color: #8b4513;
+  border-color: #9a7937;
   box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
 }
 
@@ -276,8 +276,8 @@
 }
 
 .myp-pill.active {
-  background-color: #8b4513;
-  border-color: #8b4513;
+  background-color: #9a7937;
+  border-color: #9a7937;
   color: #fff;
 }
 
@@ -397,13 +397,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid #8b4513;
-  background: #8b4513;
+  border: 1px solid #9a7937;
+  background: #9a7937;
   color: #fff;
 }
 
 .myp-follow-btn:hover {
-  background: #a0522d;
+  background: #9a7937;
 }
 
 .myp-follow-btn.following {
@@ -440,7 +440,7 @@
 
 .myp-form-input:focus {
   outline: none;
-  border-color: #8b4513;
+  border-color: #9a7937;
   box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
 }
 
@@ -457,13 +457,13 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid #8b4513;
-  background: #8b4513;
+  border: 1px solid #9a7937;
+  background: #9a7937;
   color: #fff;
 }
 
 .myp-save-btn:hover {
-  background: #a0522d;
+  background: #9a7937;
 }
 
 /* ===== Image Upload Section ===== */
@@ -498,9 +498,9 @@
 
 .myp-upload-btn {
   padding: 10px 20px;
-  border: 1px solid #8b4513;
+  border: 1px solid #9a7937;
   border-radius: 8px;
-  background: #8b4513;
+  background: #9a7937;
   color: #fff;
   text-align: center;
   cursor: pointer;
@@ -510,7 +510,7 @@
 }
 
 .myp-upload-btn:hover {
-  background: #a0522d;
+  background: #9a7937;
 }
 
 .myp-url-input {
@@ -523,6 +523,6 @@
 
 .myp-url-input:focus {
   outline: none;
-  border-color: #8b4513;
+  border-color: #9a7937;
   box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
 }
