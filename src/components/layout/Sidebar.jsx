@@ -9,12 +9,7 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 import "./Sidebar.css";
-
-
-
-
 import baseApi from "../../api/baseApi";
-import LoginRegisterModal from "./LoginRegisterModal";
 
 const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   const [user, setUser] = useState(null);
@@ -60,7 +55,6 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
     }
   };
 
-
   const menuItems = [
     { path: "/create", label: "작성", icon: <FaPen /> },
     { path: "/certification", label: "인증", icon: <FaCheckCircle /> },
@@ -91,13 +85,6 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
     };
     fetchUser();
   }, [isLoggedIn]); // 👈 isLoggedIn 상태가 변할 때마다 useEffect 실행!
-
-  const handleLogout = () => {
-    // ... 로그아웃 로직 (기존 코드)
-    localStorage.removeItem("accessToken");
-    setIsLoggedIn(false); // 로그아웃 후 상태 업데이트
-    navigate("/");
-  };
 
   const handleMenuClick = (path) => {
     if (!isLoggedIn) {
@@ -144,7 +131,6 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
       </div>
       <div className="sidebar-bottom">
         {isLoggedIn ? ( // 👈 isLoggedIn 상태에 따라 UI를 조건부 렌더링
-
           <div className="logout-btn" onClick={handleLogout}>
             <FaSignOutAlt className="logout-icon" />
             <span>로그아웃</span>
