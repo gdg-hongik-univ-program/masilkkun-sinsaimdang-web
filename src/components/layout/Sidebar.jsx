@@ -65,6 +65,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
         setIsLoggedIn(false);
         localStorage.removeItem("accessToken");
         setUser(null);
+
       }
     };
 
@@ -154,6 +155,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
           ))}
         </ul>
       </div>
+
 
       <div className="sidebar-bottom">
         {isLoggedIn ? (
