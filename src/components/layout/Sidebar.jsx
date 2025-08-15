@@ -9,10 +9,57 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 import "./Sidebar.css";
+
+
+
+
+import baseApi from "../../api/baseApi";
+import LoginRegisterModal from "./LoginRegisterModal";
+
 const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    axios
+      .get("/user/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => setUser(res.data))
+      .catch((err) => {
+        console.error("유저 정보 요청 실패:", err);
+        setUser(null);
+      });
+  }, []);
+  const handleLogout = async () => {
+    try {
+      await baseApi.post(
+        "/auth/logout",
+        { email: user.email },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+    } catch (err) {
+      console.error("로그아웃 실패:", err);
+    } finally {
+      localStorage.removeItem("accessToken");
+      navigate("/");
+    }
+  };
+
 
   const menuItems = [
     { path: "/create", label: "작성", icon: <FaPen /> },
@@ -55,6 +102,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   const handleMenuClick = (path) => {
     if (!isLoggedIn) {
       setIsLoginModalOpen(true);
+
       return;
     }
     navigate(path);
@@ -96,6 +144,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
       </div>
       <div className="sidebar-bottom">
         {isLoggedIn ? ( // 👈 isLoggedIn 상태에 따라 UI를 조건부 렌더링
+
           <div className="logout-btn" onClick={handleLogout}>
             <FaSignOutAlt className="logout-icon" />
             <span>로그아웃</span>
@@ -107,7 +156,6 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
           </div>
         )}
       </div>
-      {/* LoginRegisterModal은 App.js로 옮겼으므로 여기서는 제거 */}
     </div>
   );
 };

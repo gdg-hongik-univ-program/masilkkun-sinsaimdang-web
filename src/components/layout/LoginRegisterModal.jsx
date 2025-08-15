@@ -3,6 +3,7 @@ import Modal from "./Modal";
 import LoginForm from "../login/LoginForm";
 import Register from "../../pages/Register";
 
+
 const LoginRegisterModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [mode, setMode] = useState("login");
   useEffect(() => {
