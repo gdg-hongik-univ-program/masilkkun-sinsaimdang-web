@@ -57,7 +57,6 @@ const Register = ({ onSwitch }) => {
 
     if (nickname.length < 2 || nickname.length > 12) {
       setNicknameMessage("닉네임은 2자 이상 12자 이하로 입력해주세요.");
-
       return;
     }
 
@@ -178,15 +177,14 @@ const Register = ({ onSwitch }) => {
               중복 확인
             </button>
           </div>
-          {emailMessage && (
-            <p
-              className={`message ${
-                emailMessage.includes("가능") ? "valid" : "invalid"
-              }`}
-            >
-              {emailMessage}
-            </p>
-          )}
+          {/* 항상 메시지 영역 렌더링 */}
+          <p
+            className={`message ${
+              emailMessage.includes("가능") ? "valid" : "invalid"
+            }`}
+          >
+            {emailMessage}
+          </p>
         </div>
 
         {/* 비밀번호 */}
@@ -202,6 +200,8 @@ const Register = ({ onSwitch }) => {
             }}
             className="register-input"
           />
+          {/* 비밀번호는 메시지 영역이 없으므로 고정 높이를 위한 빈 div */}
+          <div className="message"></div>
         </div>
 
         {/* 비밀번호 확인 */}
@@ -217,6 +217,8 @@ const Register = ({ onSwitch }) => {
             className="register-input"
             placeholder="비밀번호를 다시 입력해주세요."
           />
+          {/* 비밀번호 확인도 메시지 영역이 없으므로 고정 높이를 위한 빈 div */}
+          <div className="message"></div>
         </div>
 
         {/* 이름 */}
@@ -232,6 +234,8 @@ const Register = ({ onSwitch }) => {
             className="register-input"
             placeholder="이름을 입력해주세요."
           />
+          {/* 이름도 메시지 영역이 없으므로 고정 높이를 위한 빈 div */}
+          <div className="message"></div>
         </div>
 
         {/* 닉네임 */}
@@ -258,19 +262,18 @@ const Register = ({ onSwitch }) => {
               중복 확인
             </button>
           </div>
-          {nicknameMessage && (
-            <p
-              className={`message ${
-                nicknameMessage.includes("가능") ? "valid" : "invalid"
-              }`}
-            >
-              {nicknameMessage}
-            </p>
-          )}
+          {/* 항상 메시지 영역 렌더링 */}
+          <p
+            className={`message ${
+              nicknameMessage.includes("가능") ? "valid" : "invalid"
+            }`}
+          >
+            {nicknameMessage}
+          </p>
         </div>
 
-        {/* 공통 에러 메시지 */}
-        {formError && <p className="error-message">{formError}</p>}
+        {/* 공통 에러 메시지 - 항상 렌더링 */}
+        <p className="error-message">{formError}</p>
 
         {/* 회원가입 버튼 */}
         <button type="submit" className="register-button">

@@ -7,15 +7,15 @@
 }
 
 .register-title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: bold;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 8px;
   width: 100%;
   max-width: 480px;
   justify-content: center;
@@ -24,6 +24,7 @@
 .form-group {
   display: flex;
   flex-direction: column;
+  min-height: 55px; /* 메시지 공간 포함한 최소 높이를 더 줄임 */
 }
 
 .register-input {
@@ -36,8 +37,8 @@
 }
 
 .register-label {
-  margin-bottom: 8px;
-  font-size: 16px;
+  margin-bottom: 6px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -61,8 +62,26 @@
   gap: 8px;
 }
 
+/* 메시지 영역을 완전 고정 높이로 설정 */
+.message {
+  height: 16px;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+}
+
+.message.valid {
+  color: #28a745; /* 초록색 */
+}
+
+.message.invalid {
+  color: #dc3545; /* 빨간색 */
+}
+
 .register-button {
-  margin-top: 24px;
+  margin-top: 8px;
   padding: 12px;
   background-color: #9a7937;
   color: white;
@@ -76,23 +95,29 @@
 }
 
 .back-to-login {
-  color: #555; /* 글자 색 (원하는 색상) */
-  cursor: pointer; /* 마우스 포인터 */
-  text-decoration: none; /* 밑줄 제거 */
-  background: none; /* 배경 제거 */
-  border: none; /* 테두리 제거 */
+  color: #555;
+  cursor: pointer;
+  text-decoration: none;
+  background: none;
+  border: none;
   padding: 0;
   font: inherit;
   display: inline;
   text-align: center;
+  margin-top: 8px;
 }
 
 .back-to-login:hover {
-  text-decoration: none;
+  text-decoration: underline;
 }
+
 .error-message {
-  color: red;
-  font-size: 14px;
-  margin-top: 12px;
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 6px;
   text-align: center;
+  height: 16px; /* 완전 고정 높이 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
