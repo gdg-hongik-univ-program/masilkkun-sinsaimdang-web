@@ -15,10 +15,10 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   const location = useLocation();
 
   const menuItems = [
-    { path: "/app/create", label: "작성", icon: <FaPen /> },
-    { path: "/app/certification", label: "인증", icon: <FaCheckCircle /> },
-    { path: "/app/scrapbook", label: "스크랩북", icon: <FaBookmark /> },
-    { path: "/app/mypage", label: "MY", icon: <FaUser /> },
+    { path: "/create", label: "작성", icon: <FaPen /> },
+    { path: "/certification", label: "인증", icon: <FaCheckCircle /> },
+    { path: "/scrapbook", label: "스크랩북", icon: <FaBookmark /> },
+    { path: "/mypage", label: "MY", icon: <FaUser /> },
   ];
 
   useEffect(() => {

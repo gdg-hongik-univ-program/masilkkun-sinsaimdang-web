@@ -10,7 +10,11 @@ const LoginRegisterModal = ({ isOpen, onClose, onLoginSuccess }) => {
       setMode("login");
     }
   }, [isOpen]);
-  console.log("Current mode:", mode);
+
+  const onRegisterSuccess = () => {
+    setMode("login");
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -23,7 +27,10 @@ const LoginRegisterModal = ({ isOpen, onClose, onLoginSuccess }) => {
           onLoginSuccess={onLoginSuccess}
         />
       ) : (
-        <Register onSwitch={() => setMode("login")} />
+        <Register
+          onSwitch={() => setMode("login")}
+          onRegisterSuccess={onRegisterSuccess}
+        />
       )}
     </Modal>
   );

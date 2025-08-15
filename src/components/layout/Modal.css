@@ -11,7 +11,7 @@
 .modal-content {
   background: white;
   padding: 20px;
-  height: 550px;
+  min-height: 550px;
   border-radius: 8px;
   max-width: 500px;
   margin: 100px auto;
@@ -33,5 +33,5 @@
 }
 
 .modal-register {
-  height: 700px;
+  height: 750px;
 }
