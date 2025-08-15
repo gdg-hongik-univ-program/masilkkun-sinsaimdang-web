@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./MyPage.css";
 import { FaHeart, FaBookmark } from "react-icons/fa";
+import PostCard from "../components/post/PostCard"; // PostCard 컴포넌트 import 추가
 // API 연결할 때만 필요
 // import baseApi from "../api/baseApi";
 
@@ -69,50 +70,57 @@ const mockFollowing = [
   },
 ];
 
+// PostCard에 맞는 데이터 구조로 수정
 const mockPosts = [
   {
     id: 1,
     title: "장소이름 대충 수원화성",
-    author: "이혁",
-    date: "2000년 00월 00일",
-    tags: ["여행지", "맛집", "카페"],
-    image1:
+    author: {
+      nickname: "이혁",
+      profileImage:
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face",
+    },
+    createdAt: "2000-01-01T00:00:00.000Z",
+    tags: ["TRAVEL", "RESTAURANT", "CAFE"],
+    photos: [
       "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=240&h=180&fit=crop",
-    image2:
       "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=240&h=180&fit=crop",
-    authorProfileImage:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face",
-    bookmarkCount: 1000,
+    ],
+    scrapCount: 1000,
     likeCount: 1000,
   },
   {
     id: 2,
     title: "장소이름 대충 수원화성",
-    author: "이혁",
-    date: "2000년 00월 00일",
-    tags: ["여행지", "맛집", "카페"],
-    image1:
+    author: {
+      nickname: "이혁",
+      profileImage:
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face",
+    },
+    createdAt: "2000-01-01T00:00:00.000Z",
+    tags: ["TRAVEL", "RESTAURANT", "CAFE"],
+    photos: [
       "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=240&h=180&fit=crop",
-    image2:
       "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=240&h=180&fit=crop",
-    authorProfileImage:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face",
-    bookmarkCount: 1000,
+    ],
+    scrapCount: 1000,
     likeCount: 1000,
   },
   {
     id: 3,
     title: "장소이름 대충 수원화성",
-    author: "이혁",
-    date: "2000년 00월 00일",
-    tags: ["여행지", "맛집", "카페"],
-    image1:
+    author: {
+      nickname: "이혁",
+      profileImage:
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face",
+    },
+    createdAt: "2000-01-01T00:00:00.000Z",
+    tags: ["TRAVEL", "RESTAURANT", "CAFE"],
+    photos: [
       "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=240&h=180&fit=crop",
-    image2:
       "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=240&h=180&fit=crop",
-    authorProfileImage:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face",
-    bookmarkCount: 1000,
+    ],
+    scrapCount: 1000,
     likeCount: 1000,
   },
 ];
@@ -120,8 +128,6 @@ const mockPosts = [
 export default function MyPage() {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [likedPosts, setLikedPosts] = useState(new Set());
-  const [bookmarkedPosts, setBookmarkedPosts] = useState(new Set());
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
   const [followers, setFollowers] = useState([]);
@@ -155,30 +161,6 @@ export default function MyPage() {
     //   }
     // })();
   }, []);
-
-  const handleLike = (postId) => {
-    setLikedPosts((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(postId)) {
-        newSet.delete(postId);
-      } else {
-        newSet.add(postId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleBookmark = (postId) => {
-    setBookmarkedPosts((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(postId)) {
-        newSet.delete(postId);
-      } else {
-        newSet.add(postId);
-      }
-      return newSet;
-    });
-  };
 
   const openModal = (type) => {
     setModalType(type);
@@ -314,80 +296,27 @@ export default function MyPage() {
         )}
       </div>
 
-      {/* 게시글 리스트 */}
+      {/* PostCard를 사용한 게시글 리스트 */}
       <div className="myp-posts">
-        {posts.map((p) => (
-          <article
-            key={p.id}
-            className={`myp-card ${isDeleteMode ? "delete-mode" : ""} ${
-              selectedPosts.has(p.id) ? "selected" : ""
+        {posts.map((post) => (
+          <div
+            key={post.id}
+            className={`myp-post-wrapper ${isDeleteMode ? "delete-mode" : ""} ${
+              selectedPosts.has(post.id) ? "selected" : ""
             }`}
           >
             {isDeleteMode && (
               <div className="myp-checkbox-wrapper">
                 <input
                   type="checkbox"
-                  checked={selectedPosts.has(p.id)}
-                  onChange={() => togglePostSelection(p.id)}
+                  checked={selectedPosts.has(post.id)}
+                  onChange={() => togglePostSelection(post.id)}
                   className="myp-checkbox"
                 />
               </div>
             )}
-            <div className="myp-card-images">
-              <img src={p.image1} alt="" className="myp-card-image" />
-              <img src={p.image2} alt="" className="myp-card-image" />
-            </div>
-
-            <div className="myp-card-content">
-              <div className="myp-card-header">
-                <img
-                  className="myp-card-avatar"
-                  src={p.authorProfileImage || user?.profileImage}
-                  alt=""
-                />
-                <div className="myp-card-info">
-                  <div className="myp-meta">
-                    {p.author || user?.name || "작성자"} ·{" "}
-                    {p.date || "2000년 00월 00일"}
-                  </div>
-                  <h3 className="myp-title">
-                    {p.title || "장소이름 대충 수원화성"}
-                  </h3>
-
-                  <div className="myp-tags">
-                    {(p.tags ?? ["여행지", "맛집", "카페"]).map((t) => (
-                      <span key={t} className="myp-tag">
-                        #{t}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="myp-actions">
-                    <button
-                      className={`myp-pill ${
-                        bookmarkedPosts.has(p.id) ? "active" : ""
-                      }`}
-                      onClick={() => handleBookmark(p.id)}
-                    >
-                      <FaBookmark className="myp-icon" />
-                      <span>
-                        {p.bookmarkCount?.toLocaleString() ?? "1,000"}
-                      </span>
-                    </button>
-                    <button
-                      className={`myp-pill ${
-                        likedPosts.has(p.id) ? "active" : ""
-                      }`}
-                      onClick={() => handleLike(p.id)}
-                    >
-                      <FaHeart className="myp-icon" />
-                      <span>{p.likeCount?.toLocaleString() ?? "1,000"}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </article>
+            <PostCard post={post} />
+          </div>
         ))}
       </div>
 
