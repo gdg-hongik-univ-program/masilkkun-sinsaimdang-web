@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom"; // 👈 useNavigate 추가
 
 import Sidebar from "./components/layout/Sidebar";
 import PostListPage from "./pages/PostListPage";
@@ -11,6 +11,7 @@ import MyPage from "./pages/MyPage";
 import Mapview from "./components/main/Mapview";
 import LoginRegisterModal from "./components/layout/LoginRegisterModal";
 import "./components/layout/Layout.css";
+import "./App.css";
 
 const App = () => {
   const [region, setRegion] = useState("");
@@ -19,16 +20,28 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+  const navigate = useNavigate(); // 👈 useNavigate 선언
+
   useEffect(() => {
-    // 앱이 로드될 때 로컬 스토리지에서 로그인 상태 확인
     const token = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!token); // 토큰이 있으면 true, 없으면 false
+    if (token) {
+      setIsLoggedIn(true);
+    }
   }, []);
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
-    setIsLoginModalOpen(false); // 모달 닫기
+    setIsLoginModalOpen(false);
+    navigate("/postlist"); // 👈 페이지 이동 로직 추가
   };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem("accessToken");
+    sessionStorage.removeItem("accessToken");
+    navigate("/postlist");
+  };
+
   return (
     <div className="layout-container">
       <div className="left-section">
@@ -37,6 +50,7 @@ const App = () => {
             isLoggedIn={isLoggedIn}
             setIsLoginModalOpen={setIsLoginModalOpen}
             setIsLoggedIn={setIsLoggedIn}
+            onLogout={handleLogout} // 👈 로그아웃 핸들러를 전달합니다.
           />
         </div>
         <div className="content-wrapper">
@@ -55,9 +69,7 @@ const App = () => {
               }
             />
             <Route path="create" element={<PostCreatePage />} />
-
             <Route path="post/:id" element={<PostCoursePage />} />
-
             <Route path="certification" element={<CertificationPage />} />
             <Route path="scrapbook" element={<ScrapbookPage />} />
             <Route path="mypage" element={<MyPage />} />

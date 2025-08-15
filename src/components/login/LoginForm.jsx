@@ -10,6 +10,7 @@ const LoginForm = ({ onSwitch, onLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [isChecked, setIsChecked] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
   const nav = useNavigate();
 
   const onChangeCheckbox = (e) => {
@@ -42,7 +43,7 @@ const LoginForm = ({ onSwitch, onLoginSuccess }) => {
       } else {
         sessionStorage.setItem("accessToken", accessToken);
       }
-      onLoginSuccess();
+      onLoginSuccess(accessToken);
       nav("/app/postlist");
     } catch (error) {
       console.error("로그인 실패:", error);

@@ -36,23 +36,12 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
         setUser(null);
       });
   }, []);
-  const handleLogout = async () => {
-    try {
-      await baseApi.post(
-        "/auth/logout",
-        { email: user.email },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
-    } catch (err) {
-      console.error("로그아웃 실패:", err);
-    } finally {
-      localStorage.removeItem("accessToken");
-      navigate("/");
-    }
+
+  const handleLogout = () => {
+    // ... 로그아웃 로직 (기존 코드)
+    localStorage.removeItem("accessToken");
+    setIsLoggedIn(false); // 로그아웃 후 상태 업데이트
+    navigate("/");
   };
 
   const menuItems = [
