@@ -36,7 +36,7 @@
 
 .post-create-title-input:focus {
   outline: none;
-  border-color: #8b6914;
+  border-color: #9a7937;
   box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.25);
 }
 
@@ -64,13 +64,13 @@
 }
 
 .tag-select-chip:hover {
-  border-color: #8b6914;
+  border-color: #9a7937;
 }
 
 .tag-select-chip.selected {
-  background: #8b6914;
+  background: #9a7937;
   color: white;
-  border-color: #8b6914;
+  border-color: #9a7937;
 }
 
 /* 장소 섹션 */
@@ -92,7 +92,7 @@
 .place-number {
   width: 24px;
   height: 24px;
-  background: #8b6914;
+  background: #9a7937;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -116,7 +116,7 @@
   background: none;
   border: none;
   font-size: 24px;
-  color: #dc3545;
+  color: #dcccac;
   cursor: pointer;
   padding: 0;
   width: 24px;
@@ -144,7 +144,7 @@
 
 .place-name-input:focus {
   outline: none;
-  border-color: #8b6914;
+  border-color: #9a7937;
   box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.25);
 }
 
@@ -152,9 +152,9 @@
   width: 100%;
   padding: 12px;
   background: white;
-  border: 2px solid #8b6914;
+  border: 2px solid #9a7937;
   border-radius: 8px;
-  color: #8b6914;
+  color: #9a7937;
   font-size: 16px;
   cursor: pointer;
   margin-bottom: 12px;
@@ -162,18 +162,18 @@
 }
 
 .location-select-btn:hover {
-  background: #8b6914;
+  background: #9a7937;
   color: white;
 }
 
 .selected-address {
   font-size: 14px;
-  color: #28a745;
+  color: #9a7937;
   margin-bottom: 16px;
   padding: 8px 12px;
   background: #f8fff9;
   border-radius: 6px;
-  border-left: 3px solid #28a745;
+  border-left: 3px solid #9a7937;
 }
 
 /* 이미지 업로드 */
@@ -203,8 +203,8 @@
 }
 
 .image-upload-placeholder:hover {
-  border-color: #8b6914;
-  color: #8b6914;
+  border-color: #9a7937;
+  color: #9a7937;
 }
 
 .image-icon {
@@ -235,7 +235,7 @@
 
 .place-description-input:focus {
   outline: none;
-  border-color: #8b6914;
+  border-color: #9a7937;
   box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.25);
 }
 
@@ -246,7 +246,7 @@
   background: white;
   border: 2px dashed #dee2e6;
   border-radius: 8px;
-  color: #8b6914;
+  color: #9a7937;
   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -254,7 +254,7 @@
 }
 
 .add-place-btn:hover {
-  border-color: #8b6914;
+  border-color: #9a7937;
   background: #faf9f6;
 }
 
@@ -292,12 +292,12 @@
 }
 
 .submit-btn {
-  background: #8b6914;
+  background: #9a7937;
   color: white;
 }
 
 .submit-btn:hover {
-  background: #6b4f0f;
+  background: #9a7937;
 }
 
 .submit-btn:disabled {
