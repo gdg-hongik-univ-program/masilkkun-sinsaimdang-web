@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import baseApi from "../api/baseApi";
 import "./Register.css";
 
-const Register = ({ onSwitch }) => {
+const Register = ({ onSwitch, onRegisterSuccess }) => {
   const navigate = useNavigate();
 
   // 입력값 상태
@@ -136,7 +136,8 @@ const Register = ({ onSwitch }) => {
       });
 
       if (response.status === 201 || response.status === 200) {
-        navigate("/");
+        alert("회원가입이 완료되었습니다! 로그인해주세요.");
+        onRegisterSuccess();
       }
     } catch (error) {
       console.error("회원가입 실패:", error);

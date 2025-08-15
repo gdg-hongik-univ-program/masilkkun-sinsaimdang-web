@@ -15,6 +15,7 @@
 .modal-content {
   background: white;
   padding: 20px;
+
   border-radius: 12px;
   max-width: 500px;
   width: 90%;
@@ -50,6 +51,7 @@
 /* 회원가입 모달 - 더 짧은 높이 */
 .modal-register {
   height: 750px;
+
   display: flex;
   flex-direction: column;
 }
