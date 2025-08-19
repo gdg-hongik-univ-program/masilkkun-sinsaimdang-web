@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import PostList from "../components/post/PostList"; // PostList 컴포넌트 사용
+import PostList from "../components/post/PostList";
 import "./PostListPage.css";
 import Region from "../components/layout/Region";
 import baseApi from "../api/baseApi";
+import CategoryFilter from "../components/post/CategoryFilter"; // 👈 추가
 
 const PostListPage = ({
   region,
@@ -18,44 +19,45 @@ const PostListPage = ({
     const fetchPosts = async () => {
       setLoading(true);
       try {
+        const tagMap = {
+          여행지: "TRAVEL_SPOT",
+          맛집: "RESTAURANT",
+          카페: "CAFE",
+        };
+        const tagsQuery = tagMap[selectedCategory]
+          ? tagMap[selectedCategory]
+          : "";
         const res = await baseApi.get("/articles", {
           params: {
-            tag: selectedCategory,
-            region: region,
-            sort: sortOrder,
+            tag: tagsQuery,
+            region: region || undefined,
+            page: 0,
+            size: 10,
           },
         });
         setPosts(res.data.data.content);
       } catch (err) {
         console.error("게시글 로딩 오류:", err);
-        console.log(err.response?.data);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPosts();
-  }, [selectedCategory, region, sortOrder]);
+  }, [selectedCategory, region]);
 
   return (
     <div className="post-list-page">
       <div className="top-bar">
         <Region />
       </div>
+
       <div className="filter-bar">
-        <div className="category-btns">
-          {["여행지", "맛집", "카페"].map((cat) => (
-            <button
-              key={cat}
-              className={`category-btn ${
-                selectedCategory === cat ? "active" : ""
-              }`}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <CategoryFilter
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+        />
+
         <select
           className="sort-select"
           value={sortOrder}

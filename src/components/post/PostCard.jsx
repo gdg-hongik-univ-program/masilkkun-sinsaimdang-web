@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./PostCard.css";
 import { FaHeart, FaBookmark } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import baseApi from "../../api/baseApi";
 
 const PostCard = ({ post }) => {
   const [liked, setLiked] = useState(false);
@@ -22,10 +23,42 @@ const PostCard = ({ post }) => {
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
-  const toggleBookmark = (e) => {
+  const toggleBookmark = async (e) => {
     e.stopPropagation(); // 카드 클릭 이벤트 방지
-    setBookmarked((prev) => !prev);
-    setBookmarkCount((prev) => (bookmarked ? prev - 1 : prev + 1));
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      if (!bookmarked) {
+        // 스크랩 추가
+        await baseApi.post(
+          `/articles/${post.id}/scraps`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setBookmarked(true);
+        setBookmarkCount((prev) => prev + 1);
+      } else {
+        // 스크랩 취소
+        await baseApi.delete(`/articles/${post.id}/scraps`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setBookmarked(false);
+        setBookmarkCount((prev) => prev - 1);
+      }
+    } catch (err) {
+      console.error("스크랩 처리 실패:", err);
+      alert("스크랩 처리 중 오류가 발생했습니다.");
+    }
   };
 
   const tagMap = {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom"; // 👈 useNavigate 추가
-
+import { CategoryProvider } from "./context/CategoryContext";
 import Sidebar from "./components/layout/Sidebar";
 import PostListPage from "./pages/PostListPage";
 import PostCreatePage from "./pages/PostCreatePage";
@@ -43,49 +43,51 @@ const App = () => {
   };
 
   return (
-    <div className="layout-container">
-      <div className="left-section">
-        <div className="sidebar-wrapper">
-          <Sidebar
-            isLoggedIn={isLoggedIn}
-            setIsLoginModalOpen={setIsLoginModalOpen}
-            setIsLoggedIn={setIsLoggedIn}
-            onLogout={handleLogout} // 👈 로그아웃 핸들러를 전달합니다.
-          />
-        </div>
-        <div className="content-wrapper">
-          <Routes>
-            <Route
-              path="postlist"
-              element={
-                <PostListPage
-                  region={region}
-                  setRegion={setRegion}
-                  selectedCategory={selectedCategory}
-                  setSelectedCategory={setSelectedCategory}
-                  sortOrder={sortOrder}
-                  setSortOrder={setSortOrder}
-                />
-              }
+    <CategoryProvider>
+      <div className="layout-container">
+        <div className="left-section">
+          <div className="sidebar-wrapper">
+            <Sidebar
+              isLoggedIn={isLoggedIn}
+              setIsLoginModalOpen={setIsLoginModalOpen}
+              setIsLoggedIn={setIsLoggedIn}
+              onLogout={handleLogout} // 👈 로그아웃 핸들러를 전달합니다.
             />
-            <Route path="create" element={<PostCreatePage />} />
-            <Route path="post/:id" element={<PostCoursePage />} />
-            <Route path="certification" element={<CertificationPage />} />
-            <Route path="scrapbook" element={<ScrapbookPage />} />
-            <Route path="mypage" element={<MyPage />} />
-            <Route path="*" element={<Navigate to="postlist" />} />
-          </Routes>
+          </div>
+          <div className="content-wrapper">
+            <Routes>
+              <Route
+                path="postlist"
+                element={
+                  <PostListPage
+                    region={region}
+                    setRegion={setRegion}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                    sortOrder={sortOrder}
+                    setSortOrder={setSortOrder}
+                  />
+                }
+              />
+              <Route path="create" element={<PostCreatePage />} />
+              <Route path="post/:id" element={<PostCoursePage />} />
+              <Route path="certification" element={<CertificationPage />} />
+              <Route path="scrapbook" element={<ScrapbookPage />} />
+              <Route path="mypage" element={<MyPage />} />
+              <Route path="*" element={<Navigate to="postlist" />} />
+            </Routes>
+          </div>
         </div>
+        <div className="right-section">
+          <Mapview />
+        </div>
+        <LoginRegisterModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
       </div>
-      <div className="right-section">
-        <Mapview />
-      </div>
-      <LoginRegisterModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
-      />
-    </div>
+    </CategoryProvider>
   );
 };
 
