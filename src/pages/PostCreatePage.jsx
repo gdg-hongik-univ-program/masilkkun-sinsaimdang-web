@@ -5,18 +5,17 @@ import baseApi from "../api/baseApi";
 import Region from "../components/layout/Region";
 
 const PostCreatePage = () => {
+  const [message, setMessage] = useState("");
   const [title, setTitle] = useState("");
   const [region, setRegion] = useState("");
   const [tags, setTags] = useState([]);
   const [places, setPlaces] = useState([
-    { placeName: "", address: "", image: null, description: "" },
+    { placeName: "", address: null, image: null, description: "" },
   ]);
 
   const navigate = useNavigate();
-
   const tagOptions = ["여행지", "맛집", "카페"];
 
-  // 컴포넌트 마운트 시 임시저장된 데이터 불러오기
   useEffect(() => {
     const tempPost = localStorage.getItem("tempPost");
     if (tempPost) {
@@ -26,35 +25,29 @@ const PostCreatePage = () => {
       setTags(parsed.tags || []);
       setPlaces(
         parsed.places || [
-          { placeName: "", address: "", image: null, description: "" },
+          { placeName: "", address: null, image: null, description: "" },
         ]
       );
     }
   }, []);
 
   const toggleTag = (tag) => {
-    if (tags.includes(tag)) {
-      setTags(tags.filter((t) => t !== tag));
-    } else {
-      setTags([...tags, tag]);
-    }
+    setTags(
+      tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag]
+    );
   };
 
   const handleImageUpload = (index, e) => {
     const file = e.target.files[0];
-    if (file) {
-      // 파일 크기 체크 (5MB 제한)
-      if (file.size > 5 * 1024 * 1024) {
-        alert("파일 크기는 5MB 이하만 업로드 가능합니다.");
-        return;
-      }
-
-      const imageUrl = URL.createObjectURL(file);
-      const updated = [...places];
-      updated[index].image = imageUrl;
-      updated[index].imageFile = file; // 실제 파일도 저장
-      setPlaces(updated);
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("파일 크기는 5MB 이하만 업로드 가능합니다.");
+      return;
     }
+    const updated = [...places];
+    updated[index].image = URL.createObjectURL(file);
+    updated[index].imageFile = file;
+    setPlaces(updated);
   };
 
   const handleDescriptionChange = (index, value) => {
@@ -69,36 +62,98 @@ const PostCreatePage = () => {
     setPlaces(updated);
   };
 
-  const handleLocationClick = (index) => {
-    // 실제로는 지도 API를 사용하여 위치를 선택하도록 구현
-    // 현재는 임시로 mock 주소 사용
-    const updated = [...places];
-    updated[index].address = "서울 중구 세종대로21길 53";
-    setPlaces(updated);
+  const handleLocationClick = async (index) => {
+    try {
+      setMessage("위치 가져오는 중…");
+
+      const position = await new Promise((resolve, reject) => {
+        if (!("geolocation" in navigator)) {
+          reject(new Error("위치 기능을 지원하지 않아요."));
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        });
+      });
+
+      const { latitude: lat, longitude: lng } = position.coords;
+
+      if (!window.kakao || !window.kakao.maps)
+        throw new Error("지도 API 로딩 실패");
+      const geocoder = new window.kakao.maps.services.Geocoder();
+
+      // 시/도 매핑
+      const regionMap = {
+        서울: "서울특별시",
+        부산: "부산광역시",
+        대구: "대구광역시",
+        인천: "인천광역시",
+        광주: "광주광역시",
+        대전: "대전광역시",
+        울산: "울산광역시",
+        세종: "세종특별자치시",
+        경기: "경기도",
+        강원: "강원특별자치도",
+        충북: "충청북도",
+        충남: "충청남도",
+        전북: "전북특별자치도",
+        전남: "전라남도",
+        경북: "경상북도",
+        경남: "경상남도",
+        제주: "제주특별자치도",
+      };
+
+      const roadAddressObj = await new Promise((resolve, reject) => {
+        geocoder.coord2Address(lng, lat, (result, status) => {
+          if (status === window.kakao.maps.services.Status.OK) {
+            const rawAddress = result[0].road_address || result[0].address;
+
+            const region1 =
+              regionMap[rawAddress.region_1depth_name] ||
+              rawAddress.region_1depth_name;
+            const region2 = rawAddress.region_2depth_name;
+
+            const addressObj = {
+              address_name: rawAddress.address_name,
+              region_1depth_name: region1, // 서울특별시 형태로 전달
+              region_2depth_name: region2,
+            };
+            resolve(addressObj);
+          } else {
+            reject(new Error("주소 변환 실패"));
+          }
+        });
+      });
+
+      const updated = [...places];
+      updated[index].address = roadAddressObj;
+      setPlaces(updated);
+
+      setMessage("위치 가져오기 완료!");
+    } catch (e) {
+      console.error(e);
+      setMessage(e.message || "위치 가져오기 실패");
+    }
   };
 
   const handleAddPlace = () => {
     setPlaces([
       ...places,
-      { placeName: "", address: "", image: null, description: "" },
+      { placeName: "", address: null, image: null, description: "" },
     ]);
   };
 
   const handleRemovePlace = (index) => {
-    if (places.length > 1) {
-      const updated = places.filter((_, i) => i !== index);
-      setPlaces(updated);
-    }
+    if (places.length > 1) setPlaces(places.filter((_, i) => i !== index));
   };
 
   const handleTempSave = () => {
-    const temp = {
-      title,
-      region,
-      tags,
-      places,
-    };
-    localStorage.setItem("tempPost", JSON.stringify(temp));
+    localStorage.setItem(
+      "tempPost",
+      JSON.stringify({ title, region, tags, places })
+    );
     alert("임시 저장되었습니다!");
   };
 
@@ -107,15 +162,11 @@ const PostCreatePage = () => {
       alert("제목을 입력해주세요.");
       return false;
     }
-    if (!region) {
-      alert("지역을 선택해주세요.");
-      return false;
-    }
     if (tags.length === 0) {
       alert("최소 하나의 태그를 선택해주세요.");
       return false;
     }
-    if (places.some((place) => !place.placeName.trim())) {
+    if (places.some((p) => !p.placeName.trim())) {
       alert("모든 장소의 이름을 입력해주세요.");
       return false;
     }
@@ -127,38 +178,22 @@ const PostCreatePage = () => {
 
     const postData = {
       title,
-      content: places.map((place) => place.description).join("\n\n"),
-      region,
+      content: places.map((p) => p.description).join("\n\n"),
       tags,
-      places: places.map((place, index) => ({
-        placeOrder: index + 1,
-        placeName: place.placeName,
-        address: place.address,
-        description: place.description,
+      places: places.map((p, i) => ({
+        placeOrder: i + 1,
+        placeName: p.placeName,
+        description: p.description,
+        photoUrl: p.image || null,
+        roadAddress: p.address || null,
       })),
     };
 
     try {
       const response = await baseApi.post("/articles", postData);
-
-      // 이미지가 있는 경우 별도로 업로드
-      for (let i = 0; i < places.length; i++) {
-        if (places[i].imageFile) {
-          const formData = new FormData();
-          formData.append("image", places[i].imageFile);
-          formData.append("placeIndex", i.toString());
-
-          await baseApi.post(`/articles/${response.data.id}/images`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-        }
-      }
-
-      // 임시저장 데이터 삭제
       localStorage.removeItem("tempPost");
-
       alert("게시글이 성공적으로 등록되었습니다!");
-      navigate("/"); // 메인 페이지로 이동
+      navigate("/");
     } catch (error) {
       console.error("게시글 등록 실패:", error);
       alert("게시글 등록에 실패했습니다. 다시 시도해주세요.");
@@ -167,10 +202,6 @@ const PostCreatePage = () => {
 
   return (
     <div className="post-create-container">
-      <div className="post-create-header">
-        <Region setRegion={setRegion} selectedRegion={region} />
-      </div>
-
       <div className="post-create-content">
         <input
           type="text"
@@ -231,7 +262,7 @@ const PostCreatePage = () => {
 
             {place.address && (
               <div className="selected-address">
-                선택된 주소: {place.address}
+                주소: {place.address.address_name} <br />
               </div>
             )}
 

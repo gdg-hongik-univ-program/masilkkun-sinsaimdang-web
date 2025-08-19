@@ -6,7 +6,6 @@
 }
 
 .sidebar {
-  width: 70px;
   min-width: 70px; /* 최소 너비 보장 */
   height: 100vh;
   background-color: #fff;
@@ -19,6 +18,10 @@
   position: fixed; /* 또는 relative - 필요에 따라 조정 */
   left: 0;
   top: 0;
+}
+
+.sidebar-top {
+  width: 100%;
 }
 
 .logo-box {
