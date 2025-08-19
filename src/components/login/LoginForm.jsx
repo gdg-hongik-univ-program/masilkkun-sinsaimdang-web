@@ -77,7 +77,6 @@ const LoginForm = ({ onSwitch, onLoginSuccess }) => {
                 placeholder="비밀번호"
               />
             </div>
-            {errorMessage && <p className="error-message">{errorMessage}</p>}
             <button type="submit" className="login-button">
               로그인
             </button>
@@ -114,6 +113,7 @@ const LoginForm = ({ onSwitch, onLoginSuccess }) => {
             </span>
           </div>
         </div>
+        {errorMessage && <p className="error-message">{errorMessage} </p>}
       </form>
     </div>
   );
