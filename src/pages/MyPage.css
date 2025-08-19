@@ -8,9 +8,6 @@
   box-sizing: border-box;
 }
 
-/* 사이드바가 고정(70px)이라면 필요 시 활성화 */
-/* .myp { margin-left: 70px; } */
-
 /* ===== Header (프로필 영역) ===== */
 .myp-header {
   display: flex;
@@ -110,7 +107,7 @@
 }
 
 .myp-edit-posts-btn:hover {
-  background-color: #9a7937;
+  background-color: #8a6d2f;
 }
 
 /* ===== Delete Mode ===== */
@@ -144,7 +141,7 @@
 }
 
 .myp-delete-btn:hover:not(:disabled) {
-  background-color: #9a7937;
+  background-color: #8a6d2f;
 }
 
 .myp-delete-btn:disabled {
@@ -157,21 +154,16 @@
   top: 8px;
   left: 8px;
   z-index: 10;
+  background: white;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .myp-checkbox {
   width: 20px;
   height: 20px;
   cursor: pointer;
-}
-
-.myp-card.delete-mode {
-  position: relative;
-}
-
-.myp-card.selected {
-  border-color: #9a7937;
-  box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
 }
 
 /* ===== Posts List ===== */
@@ -187,6 +179,17 @@
   overflow: hidden;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.myp-card.delete-mode {
+  transform: scale(0.98);
+}
+
+.myp-card.selected {
+  border-color: #9a7937;
+  box-shadow: 0 2px 8px rgba(154, 121, 55, 0.2);
 }
 
 .myp-card-images {
@@ -269,6 +272,7 @@
   cursor: pointer;
   font-size: 12px;
   color: #666;
+  transition: background-color 0.2s ease;
 }
 
 .myp-pill:hover {
@@ -287,9 +291,6 @@
 
 .myp-icon {
   font-size: 11px;
-}
-
-.myp-pill .myp-icon {
   color: #999;
 }
 
@@ -348,10 +349,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
 .myp-modal-close:hover {
   color: #333;
+  background-color: #f5f5f5;
 }
 
 .myp-modal-body {
@@ -403,7 +407,7 @@
 }
 
 .myp-follow-btn:hover {
-  background: #9a7937;
+  background: #8a6d2f;
 }
 
 .myp-follow-btn.following {
@@ -414,6 +418,11 @@
 
 .myp-follow-btn.following:hover {
   background: #f8f8f8;
+}
+
+.myp-follow-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===== Profile Edit Form ===== */
@@ -436,12 +445,13 @@
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
 }
 
 .myp-form-input:focus {
   outline: none;
   border-color: #9a7937;
-  box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+  box-shadow: 0 0 0 2px rgba(154, 121, 55, 0.1);
 }
 
 .myp-form-actions {
@@ -460,10 +470,16 @@
   border: 1px solid #9a7937;
   background: #9a7937;
   color: #fff;
+  transition: background-color 0.2s ease;
 }
 
-.myp-save-btn:hover {
-  background: #9a7937;
+.myp-save-btn:hover:not(:disabled) {
+  background: #8a6d2f;
+}
+
+.myp-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===== Image Upload Section ===== */
@@ -510,7 +526,7 @@
 }
 
 .myp-upload-btn:hover {
-  background: #9a7937;
+  background: #8a6d2f;
 }
 
 .myp-url-input {
@@ -519,10 +535,63 @@
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
 }
 
 .myp-url-input:focus {
   outline: none;
   border-color: #9a7937;
-  box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+  box-shadow: 0 0 0 2px rgba(154, 121, 55, 0.1);
+}
+
+/* ===== Loading ===== */
+.myp-loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.myp-modal-loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 480px) {
+  .myp {
+    padding: 16px 12px;
+  }
+
+  .myp-avatar-lg {
+    width: 80px;
+    height: 80px;
+  }
+
+  .myp-name {
+    font-size: 20px;
+  }
+
+  .myp-card-content {
+    padding: 12px;
+  }
+
+  .myp-card-images {
+    height: 100px;
+  }
+
+  .myp-card-image {
+    height: 100px;
+  }
+
+  .myp-modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+
+  .myp-image-upload-section {
+    text-align: center;
+  }
 }
