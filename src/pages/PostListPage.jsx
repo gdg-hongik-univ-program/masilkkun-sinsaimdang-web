@@ -42,7 +42,6 @@ const PostListPage = ({
       <div className="top-bar">
         <Region />
       </div>
-
       <div className="filter-bar">
         <div className="category-btns">
           {["여행지", "맛집", "카페"].map((cat) => (

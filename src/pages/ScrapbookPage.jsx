@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PostList from "../components/post/PostList";
 import "./ScrapbookPage.css";
 import baseApi from "../api/baseApi"; // API 호출을 위해 baseApi import
+import Region from "../components/layout/Region";
 
 const ScrapbookPage = () => {
   const [region, setRegion] = useState("");
@@ -49,13 +50,7 @@ const ScrapbookPage = () => {
       <h2 className="title">스크랩북</h2>
 
       <div className="top-bar">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="지역을 선택해주세요."
-          value={region}
-          onChange={(e) => setRegion(e.target.value)}
-        />
+        <Region />
       </div>
 
       <div className="filter-bar">

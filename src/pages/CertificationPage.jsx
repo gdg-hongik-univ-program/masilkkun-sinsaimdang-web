@@ -82,9 +82,34 @@ const CertificationPage = () => {
           if (status === window.kakao.maps.services.Status.OK) {
             const roadAddress = result[0].road_address;
             if (roadAddress) {
+              // 🟢 축약 → 정식 명칭 매핑
+              const regionMap = {
+                서울: "서울특별시",
+                부산: "부산광역시",
+                대구: "대구광역시",
+                인천: "인천광역시",
+                광주: "광주광역시",
+                대전: "대전광역시",
+                울산: "울산광역시",
+                세종: "세종특별자치시",
+                경기: "경기도",
+                강원: "강원특별자치도",
+                충북: "충청북도",
+                충남: "충청남도",
+                전북: "전북특별자치도",
+                전남: "전라남도",
+                경북: "경상북도",
+                경남: "경상남도",
+                제주: "제주특별자치도",
+              };
+
+              const region1 =
+                regionMap[roadAddress.region_1depth_name] ||
+                roadAddress.region_1depth_name;
+
               resolve({
                 address_name: roadAddress.address_name,
-                region_1depth_name: roadAddress.region_1depth_name,
+                region_1depth_name: region1,
                 region_2depth_name: roadAddress.region_2depth_name,
               });
             } else {
@@ -121,7 +146,7 @@ const CertificationPage = () => {
       setPhase("sending");
       setMessage("서버에 위치 인증 요청 중…");
 
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
       if (!token) {
         throw new Error("로그인이 필요합니다.");
       }
@@ -138,7 +163,7 @@ const CertificationPage = () => {
       );
 
       const data = res.data?.data ?? {};
-      if (data.verified) {
+      if (data.isVerified) {
         setPhase("success");
         setMessage("위치 인증 완료! 스탬프가 지급되었어요.");
         setResult(data);
@@ -166,33 +191,52 @@ const CertificationPage = () => {
   };
 
   return (
-    <div className="certification-page">
-      <h2>스탬프 받기</h2>
-      <p>내 위치를 인증하고 스탬프를 받아요.</p>
+    <>
+      {phase === "success" ? (
+        // ✅ 성공 화면
+        <div className="success-screen">
+          <h2>🎉 인증 완료!</h2>
+          <p>위치 인증이 성공적으로 완료되었어요.</p>
 
-      <div className="button-group">
-        {(phase === "error" || phase === "success") && (
+          <div className="stamp-box">
+            <p>
+              <strong>스탬프 1개</strong>가 지급되었습니다.
+            </p>
+          </div>
+
           <button className="retry-btn" onClick={retry}>
-            다시 시도
+            다시 인증하기
           </button>
-        )}
-        <button
-          className="certify-btn"
-          onClick={certify}
-          disabled={phase === "getting" || phase === "sending" || !geocoder}
-        >
-          {phase === "getting"
-            ? "위치 확인 중…"
-            : phase === "sending"
-            ? "인증 중…"
-            : !geocoder
-            ? "서비스 로딩 중..."
-            : "위치 인증하기"}
-        </button>
-      </div>
+        </div>
+      ) : (
+        // ✅ 기본 화면
+        <div className="certification-page">
+          <h2>스탬프 받기</h2>
+          <p>내 위치를 인증하고 스탬프를 받아요.</p>
 
-      <div className="location-status">{/* ... (기존 코드와 동일) */}</div>
-    </div>
+          <div className="button-group">
+            {phase === "error" && (
+              <button className="retry-btn" onClick={retry}>
+                다시 시도
+              </button>
+            )}
+            <button
+              className="certify-btn"
+              onClick={certify}
+              disabled={phase === "getting" || phase === "sending" || !geocoder}
+            >
+              {phase === "getting"
+                ? "위치 확인 중…"
+                : phase === "sending"
+                ? "인증 중…"
+                : !geocoder
+                ? "서비스 로딩 중..."
+                : "위치 인증하기"}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

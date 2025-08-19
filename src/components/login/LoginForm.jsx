@@ -40,6 +40,7 @@ const LoginForm = ({ onSwitch, onLoginSuccess }) => {
 
       if (isChecked) {
         localStorage.setItem("accessToken", accessToken);
+        sessionStorage.setItem("accessToken", accessToken);
       } else {
         sessionStorage.setItem("accessToken", accessToken);
       }

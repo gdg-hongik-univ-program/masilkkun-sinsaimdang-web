@@ -1,19 +1,14 @@
 .post-create-container {
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
+  padding: 10px;
 }
 
 .post-create-header {
-  background: white;
-  padding: 16px;
-  border-bottom: 1px solid #e9ecef;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  padding: 4px 0px 4px 0px;
 }
-
 .post-create-content {
   flex: 1;
   padding: 20px 16px;
