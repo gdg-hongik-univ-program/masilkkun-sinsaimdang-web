@@ -1,242 +1,278 @@
-/* PostCard.css - 원래 스타일로 복구 */
+/* PostCard.css - 간격 수정 버전 */
 .post-card {
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
   border: 1px solid #e0e0e0;
   border-radius: 16px;
   overflow: hidden;
   background-color: white;
-  max-width: 380px;
-  min-width: 300px;
   width: 100%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   cursor: pointer;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .post-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: #9a7937;
+}
+
+/* 상단 이미지 섹션 */
+.post-header {
+  display: flex !important;
+  padding: 16px 16px 4px 16px; /* 하단 패딩 더 줄임: 8px → 4px */
+  gap: 4px;
+  align-items: center;
 }
 
 .post-images {
-  display: flex;
-  height: 160px;
-  background-color: #f5f5f5;
-  position: relative;
-}
-
-.post-image {
-  object-fit: cover;
-  transition: transform 0.3s ease;
-  display: block;
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 4px;
+  height: 200px;
 }
 
 .main-image {
-  width: 50%;
+  width: 50% !important;
   height: 100%;
   object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  flex-shrink: 0;
+  background-color: #f3f4f6;
 }
 
 .sub-image {
-  width: 50%;
+  width: 50% !important;
   height: 100%;
-  border-left: 2px solid white;
   object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  flex-shrink: 0;
+  background-color: #f3f4f6;
 }
 
-.post-card:hover .post-image {
-  transform: scale(1.02);
-}
-
-.post-info {
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.profile-section {
+.sub-image-placeholder {
+  width: 50% !important;
+  height: 100%;
+  background-color: #e5e7eb;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.profile-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #f0f0f0;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 12px;
   flex-shrink: 0;
 }
 
-.user-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.post-card:hover .main-image,
+.post-card:hover .sub-image {
+  transform: scale(1.02);
 }
 
-.user-name {
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
-  margin: 0;
+/* 콘텐츠 섹션 */
+.post-content {
+  padding: 4px 16px 16px 16px; /* 상단 패딩 더 줄임: 8px → 4px */
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* 간격 줄임: 10px → 8px */
+}
+
+/* 프로필과 날짜 */
+.profile-date-section {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-img {
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  transition: opacity 0.3s ease;
+  background-color: #f3f4f6;
 }
 
 .post-date {
-  font-size: 12px;
-  color: #888;
+  font-size: 13px;
+  color: #6b7280;
   margin: 0;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
-.post-location {
+/* 제목 */
+.post-title {
   font-size: 16px;
   font-weight: 700;
-  color: #222;
+  color: #111827;
   margin: 0;
   line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+/* 태그와 버튼 하단 */
+.post-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0; /* 마진 제거: 2px → 0 */
 }
 
 .post-tags {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px; /* 태그 간격 약간 늘림: 4px → 6px (가로 정렬 시 가독성을 위해) */
+  flex-wrap: nowrap; /* 태그가 줄바꿈되지 않도록 변경: wrap → nowrap */
+  flex: 1;
+  overflow: hidden; /* 넘치는 태그 숨김 */
 }
 
 .tag {
-  color: #666;
-  font-size: 13px;
+  color: #6b7280;
+  font-size: 11px;
   font-weight: 500;
-  background-color: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
+  background-color: #f3f4f6;
+  padding: 3px 8px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0; /* 태그가 줄어들지 않도록 */
 }
 
 .tag:hover {
-  background-color: #e9ecef;
-  color: #495057;
+  background-color: #e5e7eb;
+  color: #374151;
 }
 
 .post-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 6px;
-  padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #666;
-  background: none;
-  border: none;
+  justify-content: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #6b7280;
+  background: white;
+  border: 1px solid #d1d5db;
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 20px;
+  padding: 4px 10px;
+  border-radius: 18px;
   transition: all 0.2s ease;
   font-weight: 500;
+  min-width: 50px;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .action-btn:hover {
-  background-color: #f8f9fa;
-  transform: scale(1.05);
-}
-
-.bookmark-btn.active {
-  color: #333;
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-}
-
-.bookmark-btn.active svg {
-  color: #f39c12;
-}
-
-.like-btn.active {
-  color: #e74c3c;
-  background-color: #ffeaea;
-  border: 1px solid #ffcdd2;
-}
-
-.like-btn.active svg {
-  color: #e74c3c;
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  transform: scale(1.02);
 }
 
 .action-btn svg {
-  font-size: 16px;
+  font-size: 10px;
   transition: color 0.2s ease;
+  flex-shrink: 0;
 }
 
-/* 반응형 디자인 */
+.bookmark-btn.active {
+  color: #f59e0b;
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.bookmark-btn.active svg {
+  color: #f59e0b;
+}
+
+.like-btn.active {
+  color: #ef4444;
+  background-color: #fecaca;
+  border-color: #ef4444;
+}
+
+.like-btn.active svg {
+  color: #ef4444;
+}
+
+/* 강제 숨김 */
+.badge-container,
+.user-info,
+.profile-section {
+  display: none !important;
+}
+
+/* 반응형 */
 @media (max-width: 480px) {
-  .post-card {
-    max-width: 100%;
-    min-width: 280px;
-    margin-bottom: 20px;
+  .post-header {
+    padding: 12px 12px 3px 12px; /* 간격 더 줄임 */
+    gap: 3px;
   }
 
   .post-images {
-    height: 140px;
-  }
-
-  .post-info {
-    padding: 12px 14px;
-    gap: 8px;
-  }
-
-  .post-location {
-    font-size: 15px;
-  }
-
-  .post-actions {
-    gap: 10px;
-    padding-top: 8px;
-  }
-
-  .action-btn {
-    padding: 6px 10px;
-    font-size: 13px;
+    height: 150px;
   }
 
   .profile-img {
-    width: 36px;
-    height: 36px;
+    width: 16px !important;
+    height: 16px !important;
   }
-}
 
-/* 로딩 상태 */
-.post-card.loading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.post-card.loading .post-image {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
+  .post-content {
+    padding: 3px 12px 12px 12px; /* 간격 더 줄임 */
+    gap: 6px;
   }
-  100% {
-    background-position: -200% 0;
+
+  .post-date {
+    font-size: 11px;
+  }
+
+  .post-title {
+    font-size: 14px;
+  }
+
+  .tag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .action-btn {
+    font-size: 10px;
+    padding: 3px 8px;
+    min-width: 40px;
+  }
+
+  .action-btn svg {
+    font-size: 9px;
+  }
+
+  .post-bottom {
+    gap: 6px;
+  }
+
+  .post-tags {
+    gap: 4px; /* 모바일에서는 태그 간격 줄임 */
   }
 }

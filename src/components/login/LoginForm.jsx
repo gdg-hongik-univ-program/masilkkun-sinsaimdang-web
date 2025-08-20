@@ -48,9 +48,7 @@ const LoginForm = ({ onSwitch, onLoginSuccess }) => {
       nav("/app/postlist");
     } catch (error) {
       console.error("로그인 실패:", error);
-      setErrorMessage(
-        "로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요."
-      );
+      setErrorMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
   };
 
@@ -76,6 +74,11 @@ const LoginForm = ({ onSwitch, onLoginSuccess }) => {
                 onChange={onPasswordChange}
                 placeholder="비밀번호"
               />
+              <div className="error-container">
+                {errorMessage && (
+                  <p className="error-message">{errorMessage}</p>
+                )}
+              </div>
             </div>
             <button type="submit" className="login-button">
               로그인
