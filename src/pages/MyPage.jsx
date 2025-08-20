@@ -464,7 +464,7 @@ export default function MyPage() {
 
       {/* 헤더 네비게이션 */}
       <div className="myp-header-nav">
-        <h1 className="myp-header-title">마이페이지</h1>
+        <h3 className="myp-header-title">마이페이지</h3>
       </div>
 
       {/* 헤더 */}
