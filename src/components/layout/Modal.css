@@ -42,7 +42,7 @@
 
 /* 로그인 모달 - 중앙 정렬하고 적당한 높이 */
 .modal-default {
-  height: 500px;
+  height: 550px;
   display: flex;
   flex-direction: column;
   justify-content: center;

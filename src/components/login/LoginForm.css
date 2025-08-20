@@ -90,6 +90,7 @@ input {
 }
 
 .error-message {
+  display: flex;
   color: red;
   font-size: 14px;
   margin: 0;
