@@ -96,6 +96,13 @@
 .username[data-length="10"] {
   font-size: 8px;
 }
+.username.login-required {
+  font-size: 10px !important;
+  max-width: 65px;
+  word-break: break-all;
+  white-space: normal;
+  line-height: 1.1;
+}
 
 /* 10글자 초과 시 */
 .username.long-name {
