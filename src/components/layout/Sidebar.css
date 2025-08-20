@@ -58,12 +58,49 @@
   background-color: #ddd; /* 이미지 로드 실패 시 기본 배경 */
 }
 
+/* 동적 닉네임 크기 조정 */
 .username {
   color: white;
-  font-size: 12px; /* 크기 조정 */
   font-weight: 500;
   text-align: center;
   max-width: 60px;
+  line-height: 1.2;
+  word-break: keep-all;
+
+  /* 기본 폰트 크기 */
+  font-size: 12px;
+}
+
+/* 닉네임 길이에 따른 폰트 크기 조정 */
+.username[data-length="1"],
+.username[data-length="2"],
+.username[data-length="3"] {
+  font-size: 12px;
+}
+
+.username[data-length="4"],
+.username[data-length="5"] {
+  font-size: 11px;
+}
+
+.username[data-length="6"],
+.username[data-length="7"] {
+  font-size: 10px;
+}
+
+.username[data-length="8"],
+.username[data-length="9"] {
+  font-size: 9px;
+}
+
+.username[data-length="10"] {
+  font-size: 8px;
+}
+
+/* 10글자 초과 시 */
+.username.long-name {
+  font-size: 8px;
+  max-width: 65px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

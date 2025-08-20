@@ -32,6 +32,25 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
     { path: "/mypage", label: "MY", icon: <FaUser />, tooltip: "마이페이지" },
   ];
 
+  // 닉네임 길이에 따른 클래스/속성 결정
+  const getNicknameProps = (nickname) => {
+    if (!nickname) return { className: "username", "data-length": "0" };
+
+    const length = nickname.length;
+
+    if (length > 10) {
+      return {
+        className: "username long-name",
+        "data-length": "10+",
+      };
+    }
+
+    return {
+      className: "username",
+      "data-length": length.toString(),
+    };
+  };
+
   // 유저 정보 가져오기
   useEffect(() => {
     const fetchUser = async () => {
@@ -131,6 +150,10 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
     navigate(path);
   };
 
+  // 현재 사용자 닉네임 가져오기
+  const currentNickname = user?.nickname || user?.name || "사용자";
+  const nicknameProps = getNicknameProps(currentNickname);
+
   return (
     <div className="sidebar">
       <div className="sidebar-top">
@@ -165,9 +188,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
                 objectPosition: "center",
               }}
             />
-            <p className="username">
-              {user?.nickname || user?.name || "사용자"}님
-            </p>
+            <p {...nicknameProps}>{currentNickname}님</p>
           </div>
         ) : (
           <div className="profile-box">
