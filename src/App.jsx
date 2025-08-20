@@ -24,10 +24,10 @@ const App = () => {
   const navigate = useNavigate(); // 👈 useNavigate 선언
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      setIsLoggedIn(true);
-    }
+    const token =
+      localStorage.getItem("accessToken") ||
+      sessionStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
   }, []);
 
   const handleLoginSuccess = () => {
@@ -70,18 +70,15 @@ const App = () => {
                   />
                 }
               />
-            <Route path="create" element={<PostCreatePage />} />
-            <Route path="post/:id" element={<PostCoursePage />} />
-            <Route path="certification" element={<CertificationPage />} />
-            <Route path="scrapbook" element={<ScrapbookPage />} />
-            <Route path="mypage" element={<MyPage />} />
-            <Route path="/profile/:userId" element={<ProfilePage />} />
-            <Route path="*" element={<Navigate to="postlist" />} />
-          </Routes>
+              <Route path="create" element={<PostCreatePage />} />
+              <Route path="post/:id" element={<PostCoursePage />} />
+              <Route path="certification" element={<CertificationPage />} />
+              <Route path="scrapbook" element={<ScrapbookPage />} />
+              <Route path="mypage" element={<MyPage />} />
+              <Route path="/profile/:userId" element={<ProfilePage />} />
+              <Route path="*" element={<Navigate to="postlist" />} />
+            </Routes>
           </div>
-
-
-
         </div>
         <div className="right-section">
           <Mapview />
