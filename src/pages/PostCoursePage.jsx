@@ -1,129 +1,307 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { FaHeart, FaBookmark, FaArrowLeft } from "react-icons/fa";
 import axios from "axios";
 import "./PostCoursePage.css";
 import baseApi from "../api/baseApi";
 
-// // 더미 데이터
-// const dummyPosts = [
-//   {
-//     id: "1",
-//     title: "수원화성 하루 코스 여행",
-//     author: "개굴히",
-//     date: "2000년 00월 00일",
-//     location: "수원화성",
-//     tags: ["여행지", "맛집", "카페"],
-//     image1: "https://via.placeholder.com/200x150?text=Image1",
-//     image2: "https://via.placeholder.com/200x150?text=Image2",
-//     profileImg: "",
-//     content: "여기는 수원에 있는 화성으로 경기도 화성시와 다른 곳입니다. ...",
-//     likeCount: 10,
-//     bookmarkCount: 5,
-//     courseSummary: [
-//       { name: "수원화성", address: "경기도 수원시 팔달구 장안동" },
-//       { name: "화성행궁", address: "경기도 수원시 팔달구 중동" },
-//       { name: "연무대", address: "경기도 수원시 장안구 영화동" },
-//     ],
-//     courseDetail: [
-//       {
-//         title: "역사와 문화가 살아 숨 쉬는 수원화성",
-//         placeName: "수원화성",
-//         address: "경기도 수원시 팔달구 장안동",
-//         image: "https://via.placeholder.com/400x250?text=수원화성",
-//         description: "조선시대 정조가 만든 아름다운 성곽 도시입니다...",
-//       },
-//     ],
-//   },
-//   {
-//     id: "2",
-//     title: "경복궁 도보 여행 코스",
-//     author: "홍길동",
-//     date: "2024년 05월 01일",
-//     location: "서울 경복궁",
-//     tags: ["여행지"],
-//     image1: "https://via.placeholder.com/200x150?text=A",
-//     image2: "https://via.placeholder.com/200x150?text=B",
-//     profileImg: "",
-//     content: "경복궁은 조선시대의 궁궐로 ...",
-//     likeCount: 20,
-//     bookmarkCount: 15,
-//     courseSummary: [
-//       { name: "광화문", address: "서울 종로구 세종로" },
-//       { name: "경복궁", address: "서울 종로구 사직로" },
-//       { name: "국립민속박물관", address: "서울 종로구 삼청로" },
-//     ],
-//     courseDetail: [
-//       {
-//         title: "경복궁의 역사",
-//         placeName: "경복궁",
-//         address: "서울 종로구 사직로",
-//         image: "https://via.placeholder.com/400x250?text=경복궁",
-//         description:
-//           "조선 왕조의 중심 궁궐로, 정전인 근정전은 국보로 지정됨...",
-//       },
-//     ],
-//   },
-// ];
-//여기까지 더미데이터
-
 const PostCoursePage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isScraped, setIsScraped] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [scrapCount, setScrapCount] = useState(0);
+
+  const handleGoBack = () => {
+    console.log("뒤로가기 버튼 클릭");
+    navigate(-1);
+  };
+
+  // 좋아요 처리
+  const handleLikeToggle = async () => {
+    const token =
+      sessionStorage.getItem("accessToken") ||
+      localStorage.getItem("accessToken");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        console.log("좋아요 취소 시도:", id);
+        await baseApi.delete(`articles/${id}/likes`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIsLiked(false);
+        setLikeCount((prev) => prev - 1);
+        console.log("✅ 좋아요 취소 완료");
+      } else {
+        console.log("좋아요 추가 시도:", id);
+        await baseApi.post(
+          `articles/${id}/likes`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setIsLiked(true);
+        setLikeCount((prev) => prev + 1);
+        console.log("✅ 좋아요 추가 완료");
+      }
+    } catch (err) {
+      console.error("❌ 좋아요 처리 오류:", err);
+      console.error("응답 데이터:", err.response?.data);
+      if (err.response?.status === 401) {
+        alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
+      } else {
+        alert("좋아요 처리 중 오류가 발생했습니다.");
+      }
+    }
+  };
+
+  // 스크랩 처리 - 수정된 API 방식
+  const handleScrapToggle = async () => {
+    const token =
+      sessionStorage.getItem("accessToken") ||
+      localStorage.getItem("accessToken");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      if (isScraped) {
+        console.log("스크랩 취소 시도:", id);
+        // DELETE 방식으로 스크랩 취소
+        await baseApi.delete(`articles/${id}/scraps`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIsScraped(false);
+        setScrapCount((prev) => prev - 1);
+        console.log("✅ 스크랩 취소 완료");
+        alert("스크랩이 취소되었습니다.");
+      } else {
+        console.log("스크랩 추가 시도:", id);
+        // POST 방식으로 스크랩 추가 - 여러 방법 시도
+        try {
+          // 방법 1: 빈 객체
+          await baseApi.post(
+            `articles/${id}/scraps`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } catch (firstError) {
+          console.log("방법 1 실패, 방법 2 시도");
+          try {
+            // 방법 2: null
+            await baseApi.post(`articles/${id}/scraps`, null, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+          } catch (secondError) {
+            console.log("방법 2 실패, 방법 3 시도");
+            // 방법 3: 데이터 없이
+            await baseApi.post(`articles/${id}/scraps`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+          }
+        }
+
+        setIsScraped(true);
+        setScrapCount((prev) => prev + 1);
+        console.log("✅ 스크랩 추가 완료");
+        alert("스크랩에 추가되었습니다.");
+      }
+    } catch (err) {
+      console.error("❌ 스크랩 처리 오류:", err);
+      console.error("에러 상태:", err.response?.status);
+      console.error("에러 데이터:", err.response?.data);
+      console.error("에러 메시지:", err.response?.data?.message);
+
+      if (err.response?.status === 401) {
+        alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
+      } else if (err.response?.status === 400) {
+        const message = err.response?.data?.message;
+        if (message && message.includes("이미")) {
+          alert("이미 스크랩된 게시글입니다.");
+          setIsScraped(true); // 상태 동기화
+        } else {
+          alert("잘못된 요청입니다. 다시 시도해주세요.");
+        }
+      } else if (err.response?.status === 409) {
+        alert("이미 스크랩된 게시글입니다.");
+        setIsScraped(true);
+      } else {
+        alert("스크랩 처리 중 오류가 발생했습니다.");
+      }
+    }
+  };
 
   useEffect(() => {
+    console.log("=== PostCoursePage useEffect 시작 ===");
+    console.log("게시글 ID:", id);
+
     const fetchPost = async () => {
       try {
         setLoading(true);
-        const response = await baseApi.get(`/articles/${id}`);
-        setPost(response.data.data);
+        console.log("API 호출 시작: articles/" + id);
+
+        const token =
+          sessionStorage.getItem("accessToken") ||
+          localStorage.getItem("accessToken");
+        console.log("토큰 확인:", token ? "토큰 있음" : "토큰 없음");
+
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const response = await baseApi.get(`articles/${id}`, { headers });
+
+        console.log("✅ API 응답 성공:", response.data);
+        console.log("게시글 데이터:", response.data.data);
+
+        const postData = response.data.data;
+        setPost(postData);
+
+        // 좋아요/스크랩 상태 초기화
+        setIsLiked(postData.isLiked || false);
+        setIsScraped(postData.isScraped || false);
+        setLikeCount(postData.likeCount || 0);
+        setScrapCount(postData.scrapCount || 0);
+
+        console.log("초기 상태 설정:");
+        console.log("- 좋아요:", postData.isLiked, "개수:", postData.likeCount);
+        console.log(
+          "- 스크랩:",
+          postData.isScraped,
+          "개수:",
+          postData.scrapCount
+        );
       } catch (err) {
-        console.error("게시글 조회 실패", err);
-        setError("게시글을 불러오는 데 실패했습니다.");
+        console.error("❌ 게시글 조회 실패:", err);
+        console.error("에러 상태:", err.response?.status);
+        console.error("에러 데이터:", err.response?.data);
+
+        if (err.response?.status === 401) {
+          setError("로그인이 필요하거나 권한이 없습니다.");
+        } else if (err.response?.status === 404) {
+          setError("게시글을 찾을 수 없습니다.");
+        } else {
+          setError("게시글을 불러오는 데 실패했습니다.");
+        }
       } finally {
         setLoading(false);
+        console.log("API 호출 완료");
       }
     };
 
     fetchPost();
   }, [id]);
 
-  if (loading) return <div>로딩 중...</div>;
-  if (error) return <div>{error}</div>;
-  if (!post) return <div>게시글을 찾을 수 없습니다..</div>;
+  // 렌더링 로그
+  console.log("=== PostCoursePage 렌더링 ===");
+  console.log("현재 상태 - loading:", loading, "error:", error, "post:", post);
+  console.log("좋아요 상태:", isLiked, "개수:", likeCount);
+  console.log("스크랩 상태:", isScraped, "개수:", scrapCount);
+
+  if (loading) {
+    console.log("로딩 중 화면 표시");
+    return (
+      <div className="post-course-page">
+        <button className="back-button" onClick={handleGoBack}>
+          <FaArrowLeft />
+          <span>뒤로가기</span>
+        </button>
+        <div style={{ textAlign: "center", marginTop: "100px" }}>
+          <h2>로딩 중...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.log("에러 화면 표시:", error);
+    return (
+      <div className="post-course-page">
+        <button className="back-button" onClick={handleGoBack}>
+          <FaArrowLeft />
+          <span>뒤로가기</span>
+        </button>
+        <div style={{ textAlign: "center", marginTop: "100px" }}>
+          <h2>{error}</h2>
+          <button
+            onClick={handleGoBack}
+            style={{
+              marginTop: "20px",
+              padding: "10px 20px",
+              backgroundColor: "#8B7355",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+            }}
+          >
+            뒤로가기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!post) {
+    console.log("게시글 없음 화면 표시");
+    return (
+      <div className="post-course-page">
+        <button className="back-button" onClick={handleGoBack}>
+          <FaArrowLeft />
+          <span>뒤로가기</span>
+        </button>
+        <div style={{ textAlign: "center", marginTop: "100px" }}>
+          <h2>게시글을 찾을 수 없습니다.</h2>
+        </div>
+      </div>
+    );
+  }
+
+  console.log("=== 게시글 렌더링 데이터 ===");
+  console.log("제목:", post.title);
+  console.log("지역:", post.region);
+  console.log("장소들:", post.places);
+  console.log("태그들:", post.tags);
 
   return (
     <div className="post-course-page">
+      <button className="back-button" onClick={handleGoBack}>
+        <FaArrowLeft />{" "}
+      </button>
+
       <div className="course-header">
         <h2>{post.region}</h2>
         <h1>{post.title}</h1>
         <p className="date">{post.createdAt?.slice(0, 10)}</p>
       </div>
 
-      <div className="profile-section">
-        <img
-          className="profile-img"
-          src={post.author?.profileImg || "/default-profile.png"}
-          alt="프로필"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = "/default-profile.png";
-          }}
-        />
-
-        <div className="username">{post.author?.nickname}</div>
-        <button className="follow-btn">팔로우</button>
-      </div>
-
       <div className="stats">
-        <div className="stat-box">
-          <span>🔖</span>
-          <span>{post.scrapCount?.toLocaleString()}</span>
+        <div
+          className={`stat-box bookmark-box ${isScraped ? "active" : ""}`}
+          onClick={handleScrapToggle}
+        >
+          <FaBookmark />
+          <span>{scrapCount.toLocaleString()}</span>
         </div>
-        <div className="stat-box">
-          <span>❤️</span>
-          <span>{post.likeCount?.toLocaleString()}</span>
+        <div
+          className={`stat-box heart-box ${isLiked ? "active" : ""}`}
+          onClick={handleLikeToggle}
+        >
+          <FaHeart />
+          <span>{likeCount.toLocaleString()}</span>
         </div>
       </div>
 
@@ -159,6 +337,10 @@ const PostCoursePage = () => {
               className="detail-img"
               src={post.photos?.[index] || "/default-image.png"}
               alt={`썸네일${index + 1}`}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "/default-image.png";
+              }}
             />
             <div className="detail-text">{place.description}</div>
           </div>
