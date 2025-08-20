@@ -48,6 +48,7 @@
   height: 88px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center;
   border: 2px solid #f0f0f0;
 }
 
@@ -265,6 +266,7 @@
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center;
   flex-shrink: 0;
 }
 
@@ -359,28 +361,42 @@
   box-sizing: border-box;
 }
 
+/* ✅ 프로필 수정 모달: 좀 더 넓게 */
+.myp-profile-edit-modal .myp-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  width: clamp(360px, 92vw, 520px);
+  max-height: 85vh;
+  overflow-y: auto;
+  margin: 5vh auto;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ✅ 일반 모달 (팔로워/팔로잉): 폭을 확 줄임 */
 .myp-modal-content {
   background: #fff;
   border-radius: 16px;
-  width: 90%;
-  max-width: 400px;
+  width: clamp(320px, 92vw, 420px);
   max-height: 80vh;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  position: relative;
 }
 
 .myp-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 20px 24px 16px;
   border-bottom: 1px solid #e8e8e8;
+  background: #fafafa;
 }
 
 .myp-modal-header h3 {
   margin: 0;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   color: #333;
 }
 
@@ -389,8 +405,8 @@
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #666;
-  padding: 0;
+  color: #999;
+  padding: 4px;
   width: 30px;
   height: 30px;
   display: flex;
@@ -406,8 +422,15 @@
 }
 
 .myp-modal-body {
-  padding: 16px 24px 24px;
+  padding: 24px;
   max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* 프로필 수정 모달 전용 */
+.myp-profile-edit-modal .myp-modal-body {
+  padding: 24px;
+  max-height: 65vh;
   overflow-y: auto;
 }
 
@@ -428,6 +451,7 @@
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center;
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
@@ -484,7 +508,7 @@
 
 /* ===== Profile Edit Form ===== */
 .myp-form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .myp-form-group label {
@@ -497,9 +521,9 @@
 
 .myp-form-input {
   width: 100%;
-  padding: 12px;
+  padding: 12px 16px;
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 14px;
   box-sizing: border-box;
   transition: border-color 0.2s ease;
@@ -508,47 +532,56 @@
 .myp-form-input:focus {
   outline: none;
   border-color: #9a7937;
-  box-shadow: 0 0 0 2px rgba(154, 121, 55, 0.1);
+  box-shadow: 0 0 0 3px rgba(154, 121, 55, 0.1);
 }
 
 .myp-form-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  margin-top: 24px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
 }
 
 .myp-save-btn {
-  padding: 8px 20px;
-  border-radius: 16px;
+  padding: 10px 24px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid #9a7937;
+  border: none;
   background: #9a7937;
   color: #fff;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  min-width: 80px;
 }
 
 .myp-save-btn:hover:not(:disabled) {
   background: #8a6d2f;
+  transform: translateY(-1px);
 }
 
 .myp-save-btn:disabled {
-  opacity: 0.6;
+  background-color: #ccc;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* ===== Image Upload Section ===== */
 .myp-image-upload-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 .myp-current-image {
   display: flex;
   justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .myp-preview-image {
@@ -556,13 +589,23 @@
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center;
   border: 3px solid #f0f0f0;
 }
 
 .myp-upload-buttons {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  align-items: center;
+}
+
+.button-row {
+  display: flex;
   gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .myp-file-input {
@@ -571,25 +614,47 @@
 
 .myp-upload-btn {
   padding: 10px 20px;
-  border: 1px solid #9a7937;
-  border-radius: 8px;
-  background: #9a7937;
-  color: #fff;
-  text-align: center;
-  cursor: pointer;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+  background-color: #9a7937;
+  color: white;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  text-align: center;
 }
 
 .myp-upload-btn:hover {
-  background: #8a6d2f;
+  background-color: #8a6d2f;
+  transform: translateY(-1px);
+}
+
+.myp-default-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  background-color: #6c757d;
+  color: white;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  text-align: center;
+}
+
+.myp-default-btn:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
 }
 
 .myp-url-input {
-  padding: 10px 12px;
+  width: 100%;
+  padding: 12px 16px;
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 14px;
   box-sizing: border-box;
   transition: border-color 0.2s ease;
@@ -598,7 +663,7 @@
 .myp-url-input:focus {
   outline: none;
   border-color: #9a7937;
-  box-shadow: 0 0 0 2px rgba(154, 121, 55, 0.1);
+  box-shadow: 0 0 0 3px rgba(154, 121, 55, 0.1);
 }
 
 /* ===== Loading ===== */
@@ -637,6 +702,39 @@
 }
 
 /* ===== 반응형 ===== */
+@media (max-width: 768px) {
+  .myp-profile-edit-modal .myp-modal-content {
+    width: clamp(300px, 96vw, 440px);
+    max-height: 90vh;
+    margin: 2vh auto;
+  }
+
+  .myp-modal-content {
+    width: clamp(300px, 94vw, 400px);
+    max-height: 72vh;
+  }
+
+  .button-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .myp-upload-btn,
+  .myp-default-btn {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .myp-form-actions {
+    flex-direction: column;
+  }
+
+  .myp-cancel-btn,
+  .myp-save-btn {
+    width: 100%;
+  }
+}
+
 @media (max-width: 480px) {
   .myp-page {
     padding: 0;
@@ -671,11 +769,6 @@
     height: 100px;
   }
 
-  .myp-modal-content {
-    width: 95%;
-    margin: 10px;
-  }
-
   .myp-section-header {
     margin: 0 16px 16px;
   }
@@ -684,21 +777,29 @@
     padding: 12px 16px;
   }
 
-  .myp-image-upload-section {
-    text-align: center;
+  .myp-modal-body {
+    padding: 16px;
+  }
+
+  .myp-profile-edit-modal .myp-modal-body {
+    padding: 16px;
+  }
+
+  .myp-modal-header {
+    padding: 16px 20px 12px;
   }
 }
 
-/* 추가 안정성을 위한 CSS */
+/* ===== 추가 안정성을 위한 CSS ===== */
 * {
   box-sizing: border-box;
 }
 
-.myp-page * {
-  max-width: 100%;
-}
-
-.myp-page img {
+/* ⛔ 전역 max-width 제거하고, 미디어 요소에만 제한 */
+.myp-page img,
+.myp-page video,
+.myp-page canvas,
+.myp-page iframe {
   max-width: 100%;
   height: auto;
 }
