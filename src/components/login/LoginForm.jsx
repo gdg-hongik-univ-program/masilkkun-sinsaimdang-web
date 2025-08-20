@@ -116,7 +116,6 @@ const LoginForm = ({ onSwitch, onLoginSuccess }) => {
             </span>
           </div>
         </div>
-        {errorMessage && <p className="error-message">{errorMessage} </p>}
       </form>
     </div>
   );

@@ -56,13 +56,11 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
       }
 
       try {
-        console.log("토큰으로 유저 정보 요청:", token); // 디버깅용
         const res = await baseApi.get("/user/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log("유저 데이터:", res.data); // 디버깅용 로그
         setUser(res.data.data || res.data); // API 응답 구조에 따라 조정
       } catch (err) {
         console.error("유저 정보 요청 실패:", err);

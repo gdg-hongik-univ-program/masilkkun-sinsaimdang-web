@@ -2,17 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./PostCreatePage.css";
 import baseApi from "../api/baseApi";
-import Region from "../components/layout/Region";
 
-const PostCreatePage = () => {
-  const [message, setMessage] = useState("");
+const PostCreatePage = ({ mapRef }) => {
   const [title, setTitle] = useState("");
   const [region, setRegion] = useState("");
   const [tags, setTags] = useState([]);
   const [places, setPlaces] = useState([
     { placeName: "", address: null, image: null, description: "" },
   ]);
-
+  const [activePlaceIndex, setActivePlaceIndex] = useState(null);
   const navigate = useNavigate();
   const tagOptions = ["여행지", "맛집", "카페"];
 
@@ -62,82 +60,6 @@ const PostCreatePage = () => {
     setPlaces(updated);
   };
 
-  const handleLocationClick = async (index) => {
-    try {
-      setMessage("위치 가져오는 중…");
-
-      const position = await new Promise((resolve, reject) => {
-        if (!("geolocation" in navigator)) {
-          reject(new Error("위치 기능을 지원하지 않아요."));
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        });
-      });
-
-      const { latitude: lat, longitude: lng } = position.coords;
-
-      if (!window.kakao || !window.kakao.maps)
-        throw new Error("지도 API 로딩 실패");
-      const geocoder = new window.kakao.maps.services.Geocoder();
-
-      // 시/도 매핑
-      const regionMap = {
-        서울: "서울특별시",
-        부산: "부산광역시",
-        대구: "대구광역시",
-        인천: "인천광역시",
-        광주: "광주광역시",
-        대전: "대전광역시",
-        울산: "울산광역시",
-        세종: "세종특별자치시",
-        경기: "경기도",
-        강원: "강원특별자치도",
-        충북: "충청북도",
-        충남: "충청남도",
-        전북: "전북특별자치도",
-        전남: "전라남도",
-        경북: "경상북도",
-        경남: "경상남도",
-        제주: "제주특별자치도",
-      };
-
-      const roadAddressObj = await new Promise((resolve, reject) => {
-        geocoder.coord2Address(lng, lat, (result, status) => {
-          if (status === window.kakao.maps.services.Status.OK) {
-            const rawAddress = result[0].road_address || result[0].address;
-
-            const region1 =
-              regionMap[rawAddress.region_1depth_name] ||
-              rawAddress.region_1depth_name;
-            const region2 = rawAddress.region_2depth_name;
-
-            const addressObj = {
-              address_name: rawAddress.address_name,
-              region_1depth_name: region1, // 서울특별시 형태로 전달
-              region_2depth_name: region2,
-            };
-            resolve(addressObj);
-          } else {
-            reject(new Error("주소 변환 실패"));
-          }
-        });
-      });
-
-      const updated = [...places];
-      updated[index].address = roadAddressObj;
-      setPlaces(updated);
-
-      setMessage("위치 가져오기 완료!");
-    } catch (e) {
-      console.error(e);
-      setMessage(e.message || "위치 가져오기 실패");
-    }
-  };
-
   const handleAddPlace = () => {
     setPlaces([
       ...places,
@@ -175,7 +97,6 @@ const PostCreatePage = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
     const postData = {
       title,
       content: places.map((p) => p.description).join("\n\n"),
@@ -190,13 +111,29 @@ const PostCreatePage = () => {
     };
 
     try {
-      const response = await baseApi.post("/articles", postData);
+      await baseApi.post("/articles", postData);
       localStorage.removeItem("tempPost");
       alert("게시글이 성공적으로 등록되었습니다!");
       navigate("/");
     } catch (error) {
       console.error("게시글 등록 실패:", error);
       alert("게시글 등록에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  const handleLocationClick = (index) => {
+    setActivePlaceIndex(index);
+    if (mapRef.current) {
+      mapRef.current.openSearch();
+      mapRef.current.setOnSelectPlace((place) => {
+        const updated = [...places];
+        updated[index] = {
+          ...updated[index],
+          placeName: place.placeName,
+          address: place.address,
+        };
+        setPlaces(updated);
+      });
     }
   };
 
@@ -254,15 +191,15 @@ const PostCreatePage = () => {
 
             <button
               className="location-select-btn"
-              onClick={() => handleLocationClick(index)}
               type="button"
+              onClick={() => handleLocationClick(index)}
             >
-              위치 불러오기
+              위치 등록
             </button>
 
             {place.address && (
               <div className="selected-address">
-                주소: {place.address.address_name} <br />
+                주소: {place.address} <br />
               </div>
             )}
 
