@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import "./MyPage.css";
 import { FaHeart, FaBookmark } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import baseApi from "../api/baseApi";
 
 export default function MyPage() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -29,13 +31,25 @@ export default function MyPage() {
         setError(null);
 
         // 사용자 기본 정보 로드
-        const userResponse = await baseApi.get("/api/user/me");
-        if (userResponse.data?.success) {
-          const userData = userResponse.data.data;
+        const userResponse = await baseApi.get("/user/me");
+        console.log("마이페이지 사용자 정보:", userResponse.data);
 
+        // API 응답 구조에 따른 유연한 처리
+        let userData = null;
+        if (userResponse.data?.success) {
+          userData = userResponse.data.data;
+        } else if (userResponse.data?.data) {
+          userData = userResponse.data.data;
+        } else if (userResponse.data?.nickname) {
+          userData = userResponse.data;
+        }
+
+        console.log("사용자 데이터:", userData);
+
+        if (userData) {
           // 팔로워/팔로잉 숫자 정보 로드
           const followInfoResponse = await baseApi.get(
-            `/api/users/${userData.id}/follow-info`
+            `/user/${userData.id}/follow-info`
           );
           const followInfo =
             followInfoResponse.data?.data || followInfoResponse.data || {};
@@ -48,15 +62,18 @@ export default function MyPage() {
               followInfo.followingCount ?? userData.followingCount ?? 0,
           };
 
+          console.log("완성된 사용자 데이터:", completeUserData);
           setUser(completeUserData);
           setEditForm({
-            nickname: userData.nickname || "",
+            nickname: userData.nickname || userData.name || "",
             profileImageUrl: userData.profileImageUrl || "",
           });
+        } else {
+          console.error("사용자 데이터를 찾을 수 없습니다:", userResponse.data);
         }
 
         // 사용자 게시글 로드 (응답 형태 정규화)
-        const myPosts = await baseApi.get("/articles/me");
+        const myPosts = await baseApi.get("/user/scraps");
         const normalizedPosts =
           (Array.isArray(myPosts.data?.data?.content) &&
             myPosts.data.data.content) ||
@@ -74,27 +91,70 @@ export default function MyPage() {
   }, []);
 
   // 팔로워/팔로잉 데이터 로드
-  const loadFollowData = async (type) => {
+  const loadFollowDataAlternative = async (type) => {
     if (!user?.id) return;
     try {
       setLoading(true);
       setError(null);
 
-      const response = await baseApi.get(`/api/users/${user.id}/${type}`);
+      // 백엔드 API 명세에 따라 엔드포인트 조정
+      let endpoint;
+      if (type === "followers") {
+        // 가능한 팔로워 API 엔드포인트들
+        endpoint = `/user/${user.id}/followers`; // 또는
+        // endpoint = `/users/${user.id}/followers`; // 또는
+        // endpoint = `/follow/${user.id}/followers`; // 또는
+        // endpoint = `/api/users/${user.id}/followers`;
+      } else {
+        endpoint = `/user/${user.id}/following`;
+      }
+
+      console.log(`API 호출: ${endpoint}`);
+      const response = await baseApi.get(endpoint);
+
+      // 응답 데이터 구조 확인
+      console.log(`${type} 응답:`, response.data);
 
       if (type === "followers") {
-        setFollowers(response.data?.data || response.data || []);
+        // 다양한 응답 구조에 대응
+        const followersData =
+          response.data?.data?.content || // 페이징된 응답
+          response.data?.data || // 일반적인 응답
+          response.data?.followers || // 특정 필드명
+          response.data || // 직접 배열
+          [];
+
+        setFollowers(Array.isArray(followersData) ? followersData : []);
       } else {
-        const followingData = response.data?.data || response.data || [];
-        setFollowing(followingData);
-        setFollowingUsers(new Set(followingData.map((u) => u.id)));
+        const followingData =
+          response.data?.data?.content ||
+          response.data?.data ||
+          response.data?.following ||
+          response.data ||
+          [];
+
+        const followingArray = Array.isArray(followingData)
+          ? followingData
+          : [];
+        setFollowing(followingArray);
+        setFollowingUsers(new Set(followingArray.map((u) => u.id)));
       }
     } catch (e) {
       console.error(`${type} 데이터 로드 실패:`, e);
+
+      // 상세한 에러 정보 로깅
+      if (e.response) {
+        console.error("HTTP 상태:", e.response.status);
+        console.error("에러 데이터:", e.response.data);
+        console.error("에러 헤더:", e.response.headers);
+      }
+
       setError(
         `${
           type === "followers" ? "팔로워" : "팔로잉"
-        } 목록을 불러오는데 실패했습니다.`
+        } 목록을 불러오는데 실패했습니다. (${
+          e.response?.status || "Network Error"
+        })`
       );
     } finally {
       setLoading(false);
@@ -106,7 +166,7 @@ export default function MyPage() {
     if (!user?.id) return;
     try {
       const followInfoResponse = await baseApi.get(
-        `/api/users/${user.id}/follow-info`
+        `/user/${user.id}/follow-info`
       );
       const followInfo =
         followInfoResponse.data?.data || followInfoResponse.data || {};
@@ -124,7 +184,7 @@ export default function MyPage() {
   const handleFollow = async (userId) => {
     try {
       const isCurrentlyFollowing = followingUsers.has(userId);
-      const response = await baseApi.post(`/api/users/${userId}/follow`);
+      const response = await baseApi.post(`/user/${userId}/follow`);
 
       if (response.data?.success) {
         setFollowingUsers((prev) => {
@@ -204,18 +264,18 @@ export default function MyPage() {
   const saveProfile = async () => {
     try {
       setLoading(true);
-      const response = await baseApi.put("/api/user/me", {
+      const response = await baseApi.put("/user/me", {
         nickname: editForm.nickname,
         profileImageUrl: editForm.profileImageUrl,
       });
 
       if (response.data?.success) {
-        const userResponse = await baseApi.get("/api/user/me");
+        const userResponse = await baseApi.get("/user/me");
         if (userResponse.data?.success) {
           const userData = userResponse.data.data;
 
           const followInfoResponse = await baseApi.get(
-            `/api/users/${userData.id}/follow-info`
+            `/user/${userData.id}/follow-info`
           );
           const followInfo =
             followInfoResponse.data?.data || followInfoResponse.data || {};
@@ -257,9 +317,27 @@ export default function MyPage() {
     reader.readAsDataURL(file);
   };
 
+  const handlePostClick = (postId) => {
+    navigate(`/post/${postId}`);
+  };
+
+  const handleUserProfileClick = (userId) => {
+    navigate(`/profile/${userId}`);
+  };
+
   return (
-    <div className="myp">
-      {loading && <div className="myp-loading">로딩 중...</div>}
+    <div className="myp-page">
+      {/* 로딩 오버레이 */}
+      {loading && (
+        <div className="myp-loading-overlay">
+          <div>로딩 중...</div>
+        </div>
+      )}
+
+      {/* 헤더 네비게이션 */}
+      <div className="myp-header-nav">
+        <h1 className="myp-header-title">마이페이지</h1>
+      </div>
 
       {/* 헤더 */}
       <section className="myp-header">
@@ -271,7 +349,7 @@ export default function MyPage() {
           }
           alt="프로필"
         />
-        <h1 className="myp-name">{user?.nickname ?? "여행가 마실쿤"}</h1>
+        <h1 className="myp-name">{user?.nickname}</h1>
         <button className="myp-edit-btn" onClick={openProfileEdit}>
           수정
         </button>
@@ -315,116 +393,126 @@ export default function MyPage() {
 
       {/* 게시글 리스트 */}
       <div className="myp-posts">
-        {posts.map((post) => {
-          const img1 =
-            post?.photos?.[0] || post?.image1 || "/default-image.png";
-          const img2 =
-            post?.photos?.[1] ||
-            post?.image2 ||
-            post?.photos?.[0] ||
-            "/default-image.png";
-          const dateStr = post?.createdAt
-            ? new Date(post.createdAt).toString() !== "Invalid Date"
-              ? new Date(post.createdAt).toLocaleDateString("ko-KR")
-              : ""
-            : "";
+        {posts.length === 0 ? (
+          <div className="myp-no-posts">게시글이 없습니다.</div>
+        ) : (
+          posts.map((post) => {
+            const img1 =
+              post?.photos?.[0] || post?.image1 || "/default-image.png";
+            const img2 =
+              post?.photos?.[1] ||
+              post?.image2 ||
+              post?.photos?.[0] ||
+              "/default-image.png";
+            const dateStr = post?.createdAt
+              ? new Date(post.createdAt).toString() !== "Invalid Date"
+                ? new Date(post.createdAt).toLocaleDateString("ko-KR")
+                : ""
+              : "";
 
-          return (
-            <div
-              key={post.id}
-              className={`myp-card ${isDeleteMode ? "delete-mode" : ""} ${
-                selectedPosts.has(post.id) ? "selected" : ""
-              }`}
-            >
-              {isDeleteMode && (
-                <div className="myp-checkbox-wrapper">
-                  <input
-                    type="checkbox"
-                    checked={selectedPosts.has(post.id)}
-                    onChange={() => togglePostSelection(post.id)}
-                    className="myp-checkbox"
+            return (
+              <div
+                key={post.id}
+                className={`myp-card ${isDeleteMode ? "delete-mode" : ""} ${
+                  selectedPosts.has(post.id) ? "selected" : ""
+                }`}
+                onClick={
+                  !isDeleteMode ? () => handlePostClick(post.id) : undefined
+                }
+              >
+                {isDeleteMode && (
+                  <div className="myp-checkbox-wrapper">
+                    <input
+                      type="checkbox"
+                      checked={selectedPosts.has(post.id)}
+                      onChange={() => togglePostSelection(post.id)}
+                      className="myp-checkbox"
+                    />
+                  </div>
+                )}
+
+                {/* 이미지 섹션 */}
+                <div className="myp-card-images">
+                  <img
+                    src={img1}
+                    alt={`${post.title} 이미지 1`}
+                    className="myp-card-image"
+                  />
+                  <img
+                    src={img2}
+                    alt={`${post.title} 이미지 2`}
+                    className="myp-card-image"
                   />
                 </div>
-              )}
 
-              {/* 이미지 섹션 */}
-              <div className="myp-card-images">
-                <img
-                  src={img1}
-                  alt={`${post.title} 이미지 1`}
-                  className="myp-card-image"
-                />
-                <img
-                  src={img2}
-                  alt={`${post.title} 이미지 2`}
-                  className="myp-card-image"
-                />
-              </div>
-
-              {/* 내용 섹션 */}
-              <div className="myp-card-content">
-                <div className="myp-card-header">
-                  <img
-                    src={
-                      post?.author?.profileImage ||
-                      user?.profileImageUrl ||
-                      "https://www.studiopeople.kr/common/img/default_profile.png"
-                    }
-                    alt={post?.author?.nickname || "작성자"}
-                    className="myp-card-avatar"
-                  />
-                  <div className="myp-card-info">
-                    <div className="myp-meta">
-                      {post?.author?.nickname || user?.nickname}
-                      {dateStr && ` • ${dateStr}`}
-                    </div>
-                    <h3 className="myp-title">{post.title}</h3>
-
-                    <div className="myp-tags">
-                      {Array.isArray(post?.tags) &&
-                        post.tags.slice(0, 2).map((tag, idx) => (
-                          <span key={idx} className="myp-tag">
-                            #
-                            {tag === "TRAVEL"
-                              ? "여행지"
-                              : tag === "RESTAURANT"
-                              ? "맛집"
-                              : tag === "CAFE"
-                              ? "카페"
-                              : tag}
-                          </span>
-                        ))}
-                    </div>
-
-                    <div className="myp-actions">
-                      <div className="myp-pill">
-                        <FaBookmark className="myp-icon" />
-                        <span>
-                          {post?.scrapCount >= 1000
-                            ? `${(post.scrapCount / 1000).toFixed(1)}K`
-                            : post?.scrapCount ?? 0}
-                        </span>
+                {/* 내용 섹션 */}
+                <div className="myp-card-content">
+                  <div className="myp-card-header">
+                    <img
+                      src={
+                        post?.author?.profileImage ||
+                        user?.profileImageUrl ||
+                        "https://www.studiopeople.kr/common/img/default_profile.png"
+                      }
+                      alt={post?.author?.nickname || "작성자"}
+                      className="myp-card-avatar"
+                    />
+                    <div className="myp-card-info">
+                      <div className="myp-meta">
+                        {post?.author?.nickname || user?.nickname}
+                        {dateStr && ` • ${dateStr}`}
                       </div>
-                      <div className="myp-pill">
-                        <FaHeart className="myp-icon" />
-                        <span>
-                          {post?.likeCount >= 1000
-                            ? `${(post.likeCount / 1000).toFixed(1)}K`
-                            : post?.likeCount ?? 0}
-                        </span>
+                      <h3 className="myp-title">{post.title}</h3>
+
+                      <div className="myp-tags">
+                        {Array.isArray(post?.tags) &&
+                          post.tags.slice(0, 2).map((tag, idx) => (
+                            <span key={idx} className="myp-tag">
+                              #
+                              {tag === "TRAVEL"
+                                ? "여행지"
+                                : tag === "RESTAURANT"
+                                ? "맛집"
+                                : tag === "CAFE"
+                                ? "카페"
+                                : tag}
+                            </span>
+                          ))}
+                      </div>
+
+                      <div className="myp-actions">
+                        <div className="myp-pill">
+                          <FaBookmark className="myp-icon" />
+                          <span>
+                            {post?.scrapCount >= 1000
+                              ? `${(post.scrapCount / 1000).toFixed(1)}K`
+                              : post?.scrapCount ?? 0}
+                          </span>
+                        </div>
+                        <div className="myp-pill">
+                          <FaHeart className="myp-icon" />
+                          <span>
+                            {post?.likeCount >= 1000
+                              ? `${(post.likeCount / 1000).toFixed(1)}K`
+                              : post?.likeCount ?? 0}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* 프로필 수정 모달 */}
       {isEditingProfile && (
-        <div className="myp-modal-overlay" onClick={closeProfileEdit}>
+        <div
+          className="myp-modal-overlay myp-profile-edit-modal"
+          onClick={closeProfileEdit}
+        >
           <div
             className="myp-modal-content"
             onClick={(e) => e.stopPropagation()}
@@ -532,21 +620,29 @@ export default function MyPage() {
                         }
                         alt={person.nickname || person.name}
                         className="myp-user-avatar"
+                        onClick={() => handleUserProfileClick(person.id)}
+                        style={{ cursor: "pointer" }}
                       />
                       <div className="myp-user-info">
-                        <span className="myp-user-name">
+                        <span
+                          className="myp-user-name"
+                          onClick={() => handleUserProfileClick(person.id)}
+                          style={{ cursor: "pointer" }}
+                        >
                           {person.nickname || person.name}
                         </span>
                       </div>
-                      <button
-                        className={`myp-follow-btn ${
-                          followingUsers.has(person.id) ? "following" : ""
-                        }`}
-                        onClick={() => handleFollow(person.id)}
-                        disabled={loading}
-                      >
-                        {followingUsers.has(person.id) ? "팔로잉" : "팔로우"}
-                      </button>
+                      {person.id !== user?.id && (
+                        <button
+                          className={`myp-follow-btn ${
+                            followingUsers.has(person.id) ? "following" : ""
+                          }`}
+                          onClick={() => handleFollow(person.id)}
+                          disabled={loading}
+                        >
+                          {followingUsers.has(person.id) ? "팔로잉" : "팔로우"}
+                        </button>
+                      )}
                     </div>
                   )
                 )
@@ -555,6 +651,9 @@ export default function MyPage() {
           </div>
         </div>
       )}
+
+      {/* 에러 메시지 */}
+      {error && <div className="myp-error">{error}</div>}
     </div>
   );
 }

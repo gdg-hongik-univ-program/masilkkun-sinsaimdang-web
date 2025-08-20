@@ -8,6 +8,7 @@ import PostCoursePage from "./pages/PostCoursePage";
 import CertificationPage from "./pages/CertificationPage";
 import ScrapbookPage from "./pages/ScrapbookPage";
 import MyPage from "./pages/MyPage";
+import ProfilePage from "./pages/ProfilePage";
 import Mapview from "./components/main/Mapview";
 import LoginRegisterModal from "./components/layout/LoginRegisterModal";
 import "./components/layout/Layout.css";
@@ -73,6 +74,7 @@ const App = () => {
             <Route path="certification" element={<CertificationPage />} />
             <Route path="scrapbook" element={<ScrapbookPage />} />
             <Route path="mypage" element={<MyPage />} />
+            <Route path="/profile/:userId" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="postlist" />} />
           </Routes>
         </div>

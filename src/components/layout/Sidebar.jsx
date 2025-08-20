@@ -18,25 +18,25 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
 
   const menuItems = [
     {
-      path: "/create", // /app/create → /create 수정
+      path: "/create",
       label: "작성",
       icon: <FaPen />,
       tooltip: "게시글 작성",
     },
     {
-      path: "/certification", // /app/certification → /certification 수정
+      path: "/certification",
       label: "인증",
       icon: <FaCheckCircle />,
       tooltip: "인증하기",
     },
     {
-      path: "/scrapbook", // /app/scrapbook → /scrapbook 수정
+      path: "/scrapbook",
       label: "스크랩북",
       icon: <FaBookmark />,
       tooltip: "스크랩북",
     },
     {
-      path: "/mypage", // /app/mypage → /mypage 수정
+      path: "/mypage",
       label: "MY",
       icon: <FaUser />,
       tooltip: "마이페이지",
@@ -46,7 +46,9 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   // 유저 정보 가져오기
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("accessToken");
+      const token =
+        localStorage.getItem("accessToken") ||
+        sessionStorage.getItem("accessToken");
 
       if (!isLoggedIn || !token) {
         setUser(null);
@@ -54,18 +56,29 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
       }
 
       try {
-        const res = await axios.get("/user/me", {
+        console.log("토큰으로 유저 정보 요청:", token); // 디버깅용
+        const res = await baseApi.get("/user/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        setUser(res.data);
+        console.log("유저 데이터:", res.data); // 디버깅용 로그
+        setUser(res.data.data || res.data); // API 응답 구조에 따라 조정
       } catch (err) {
         console.error("유저 정보 요청 실패:", err);
-        setIsLoggedIn(false);
-        localStorage.removeItem("accessToken");
-        setUser(null);
+        console.error("에러 상세:", err.response?.data); // 에러 상세 정보
 
+        // 401이나 403 에러인 경우 로그아웃 처리
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setIsLoggedIn(false);
+          localStorage.removeItem("accessToken");
+          sessionStorage.removeItem("accessToken");
+          setUser(null);
+        }
+        // 500 에러인 경우 사용자 정보만 null로 설정하고 로그인 상태는 유지
+        else {
+          setUser(null);
+        }
       }
     };
 
@@ -89,6 +102,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
       console.error("로그아웃 실패:", err);
     } finally {
       localStorage.removeItem("accessToken");
+      sessionStorage.removeItem("accessToken");
       setIsLoggedIn(false);
       setUser(null);
       navigate("/");
@@ -96,15 +110,15 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   };
 
   const handleMenuClick = (path) => {
-    console.log("메뉴 클릭:", path, "로그인 상태:", isLoggedIn); // 디버깅용 로그 추가
+    console.log("메뉴 클릭:", path, "로그인 상태:", isLoggedIn);
 
     if (!isLoggedIn) {
-      console.log("로그인 모달 열기"); // 디버깅용 로그 추가
+      console.log("로그인 모달 열기");
       setIsLoginModalOpen(true);
       return;
     }
 
-    console.log("페이지 이동:", path); // 디버깅용 로그 추가
+    console.log("페이지 이동:", path);
     navigate(path);
   };
 
@@ -113,7 +127,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
       <div className="sidebar-top">
         <div
           className="logo-box"
-          onClick={() => navigate("/postlist")} // /app/postlist → /postlist 수정
+          onClick={() => navigate("/postlist")}
           style={{ cursor: "pointer" }}
         >
           <img src="/logo2.png" alt="logo2" className="logo-img" />
@@ -122,11 +136,20 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
         {isLoggedIn && user ? (
           <div className="profile-box">
             <img
-              src={user?.profileImage || "/default-profile.png"}
+              src={
+                user?.profileImage ||
+                user?.profile_image ||
+                "/default-profile.png"
+              }
               alt="프로필"
               className="sidebar-profile-img"
+              onError={(e) => {
+                e.target.src = "/default-profile.png";
+              }}
             />
-            <p className="username">{user?.name || user?.nickname}님</p>
+            <p className="username">
+              {user?.name || user?.nickname || "사용자"}님
+            </p>
           </div>
         ) : (
           <div className="profile-box">
@@ -155,7 +178,6 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
           ))}
         </ul>
       </div>
-
 
       <div className="sidebar-bottom">
         {isLoggedIn ? (

@@ -13,6 +13,12 @@
   justify-content: center;
 }
 
+.error-container {
+  height: 20px;
+  display: flex;
+  align-items: flex-start;
+}
+
 input {
   height: 36px;
   font-size: 16px;
@@ -41,7 +47,7 @@ input {
 .formbody {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
   width: 350px;
 }
 
@@ -64,7 +70,7 @@ input {
   gap: 24px;
   font-size: 14px;
   color: #555;
-  margin-top: 16px;
+  margin-top: 8px;
 
   flex-wrap: nowrap;
   white-space: nowrap;
@@ -82,11 +88,13 @@ input {
   color: inherit;
   cursor: default;
 }
+
 .error-message {
   color: red;
   font-size: 14px;
-  margin-top: 8px;
-  text-align: center;
+  margin: 0;
+  text-align: left;
+  line-height: 1.2;
 }
 
 .plain-button {
