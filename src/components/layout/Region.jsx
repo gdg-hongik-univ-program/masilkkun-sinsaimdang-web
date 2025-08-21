@@ -19,17 +19,24 @@ const options = [
   "울산",
 ];
 
-const Region = () => {
+const Region = ({ region, setRegion }) => {
   const [open, setOpen] = useState(false);
-  const [region, setRegion] = useState("");
 
   return (
     <div className="region-wrapper">
       <div className="region-selected" onClick={() => setOpen(!open)}>
-        {region || "지역을 선택해주세요."}
+        {region || "지역"}
       </div>
       {open && (
         <ul className="region-dropdown">
+          <li
+            onClick={() => {
+              setRegion("");
+              setOpen(false);
+            }}
+          >
+            지역
+          </li>
           {options.map((opt) => (
             <li
               key={opt}
