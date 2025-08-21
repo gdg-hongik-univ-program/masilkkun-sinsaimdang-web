@@ -23,6 +23,25 @@ const PostCreatePage = ({ mapRef }) => {
     { label: "맛집", value: "RESTAURANT" },
     { label: "카페", value: "CAFE" },
   ];
+  const regionMap = {
+    서울: "서울특별시",
+    부산: "부산광역시",
+    대구: "대구광역시",
+    인천: "인천광역시",
+    광주: "광주광역시",
+    대전: "대전광역시",
+    울산: "울산광역시",
+    세종: "세종특별자치시",
+    경기: "경기도",
+    강원: "강원특별자치도",
+    충북: "충청북도",
+    충남: "충청남도",
+    전북: "전북특별자치도",
+    전남: "전라남도",
+    경북: "경상북도",
+    경남: "경상남도",
+    제주: "제주특별자치도",
+  };
 
   // tempPost 불러오기
   useEffect(() => {
@@ -182,11 +201,10 @@ const PostCreatePage = ({ mapRef }) => {
     if (!validateForm()) return;
 
     try {
-      // 1️⃣ 게시글 JSON 데이터 만들기
       const postData = {
         title,
         content: places.map((p) => p.description).join("\n\n"),
-        tags: tags.map((t) => t.value || t), // value만 추출
+        tags: tags.map((t) => t.value || t),
         places: places.map((p, i) => ({
           placeOrder: i + 1,
           placeName: p.placeName,
@@ -201,32 +219,25 @@ const PostCreatePage = ({ mapRef }) => {
 
       const token = localStorage.getItem("accessToken");
 
-      // 2️⃣ JSON 먼저 보내기
-      const postResponse = await baseApi.post("/articles", postData, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // ✅ FormData 생성
+      const formData = new FormData();
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(postData)], { type: "application/json" })
+      );
 
-      const articleId = postResponse.data.id; // 서버에서 반환하는 게시글 id
-
-      // 3️⃣ 이미지 업로드 (multipart/form-data)
-      const imageForm = new FormData();
-      places.forEach((p, i) => {
+      places.forEach((p) => {
         if (p.imageFile) {
-          imageForm.append("images", p.imageFile);
+          formData.append("images", p.imageFile);
         }
       });
 
-      if (imageForm.has("images")) {
-        await baseApi.post(`/articles`, imageForm, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
+      // ✅ Content-Type 지정하지 말 것!
+      await baseApi.post("/articles", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       alert("게시글이 성공적으로 등록되었습니다!");
       navigate("/");
@@ -234,26 +245,6 @@ const PostCreatePage = ({ mapRef }) => {
       console.error("게시글 등록 실패:", error);
       alert("게시글 등록에 실패했습니다. 다시 시도해주세요.");
     }
-  };
-
-  const regionMap = {
-    서울: "서울특별시",
-    부산: "부산광역시",
-    대구: "대구광역시",
-    인천: "인천광역시",
-    광주: "광주광역시",
-    대전: "대전광역시",
-    울산: "울산광역시",
-    세종: "세종특별자치시",
-    경기: "경기도",
-    강원: "강원특별자치도",
-    충북: "충청북도",
-    충남: "충청남도",
-    전북: "전북특별자치도",
-    전남: "전라남도",
-    경북: "경상북도",
-    경남: "경상남도",
-    제주: "제주특별자치도",
   };
 
   const handleLocationClick = (index) => {
