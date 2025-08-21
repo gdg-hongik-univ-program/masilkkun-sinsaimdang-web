@@ -109,19 +109,14 @@ const PostCard = ({ post }) => {
 
   // 이미지 로드 에러 핸들링 - 깜빡임 방지
   const handleImageError = (e) => {
-    e.target.style.opacity = "0";
-    setTimeout(() => {
-      e.target.src = "/default-image.png";
-      e.target.style.opacity = "1";
-    }, 100);
+    if (e.target.src.includes("default-image.png")) return; // 이미 기본 이미지면 중단
+    e.target.src = "/default-image.png";
   };
 
   const handleProfileImageError = (e) => {
-    e.target.style.opacity = "0";
-    setTimeout(() => {
-      e.target.src = "/default-profile.png";
-      e.target.style.opacity = "1";
-    }, 100);
+    // 이미 기본 이미지면 중단
+    if (e.target.src.includes("default-profile.png")) return;
+    e.target.src = "/default-profile.png";
   };
 
   // 제목 길이 제한
@@ -149,9 +144,9 @@ const PostCard = ({ post }) => {
         <div className="post-images">
           <img
             src={post.photos?.[0] || "/default-image.png"}
-            alt={`${post.title || "게시글"} 메인 이미지`}
-            className="main-image"
+            alt={post.title || "게시글 이미지"}
             onError={handleImageError}
+            className="main-image"
             loading="lazy"
           />
           {post.photos?.[1] ? (
