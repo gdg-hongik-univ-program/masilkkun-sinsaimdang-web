@@ -178,19 +178,35 @@ const Mapview = forwardRef(({ onSelectPlace }, ref) => {
             const coords = unit.geometry.coordinates[0];
             const name = unit.properties.SIG_KOR_NM;
             const code = unit.properties.SIG_CD;
-            const path = coords.map(
-              (coord) => new kakao.maps.LatLng(coord[1], coord[0])
-            );
-            return { name, location: code, path };
-          });
+            let paths = [];
 
+            if (unit.geometry.type === "Polygon") {
+              paths = unit.geometry.coordinates.map((ring) =>
+                ring.map((coord) => new kakao.maps.LatLng(coord[1], coord[0]))
+              );
+            }
+            // MultiPolygon: [ [ [ [lng, lat], ... ] ], [ [lng, lat], ... ] ]
+            else if (unit.geometry.type === "MultiPolygon") {
+              unit.geometry.coordinates.forEach((polygon) => {
+                polygon.forEach((ring) => {
+                  paths.push(
+                    ring.map(
+                      (coord) => new kakao.maps.LatLng(coord[1], coord[0])
+                    )
+                  );
+                });
+              });
+            }
+
+            return { name, location: code, paths };
+          });
           areas.forEach(drawPolygon);
         }
 
         function drawPolygon(area) {
           const polygon = new kakao.maps.Polygon({
             map,
-            path: area.path,
+            path: area.paths,
             strokeWeight: 2,
             strokeColor: "#004c80",
             strokeOpacity: 0.8,
@@ -213,7 +229,7 @@ const Mapview = forwardRef(({ onSelectPlace }, ref) => {
           loadGeoJson("/json/sido.json");
 
           kakao.maps.event.addListener(map, "zoom_changed", () => {
-            const level = map.get2Level();
+            const level = map.getLevel();
             if (!detailMode && level <= 10) {
               detailMode = true;
               clearPolygons();
