@@ -31,10 +31,10 @@ const App = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      setIsLoggedIn(true);
-    }
+    const token =
+      localStorage.getItem("accessToken") ||
+      sessionStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
   }, []);
 
   const handleLoginSuccess = () => {

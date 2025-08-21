@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaPen,
@@ -17,12 +16,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   const location = useLocation();
 
   const menuItems = [
-    {
-      path: "/create",
-      label: "작성",
-      icon: <FaPen />,
-      tooltip: "게시글 작성",
-    },
+    { path: "/create", label: "작성", icon: <FaPen />, tooltip: "게시글 작성" },
     {
       path: "/certification",
       label: "인증",
@@ -35,13 +29,27 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
       icon: <FaBookmark />,
       tooltip: "스크랩북",
     },
-    {
-      path: "/mypage",
-      label: "MY",
-      icon: <FaUser />,
-      tooltip: "마이페이지",
-    },
+    { path: "/mypage", label: "MY", icon: <FaUser />, tooltip: "마이페이지" },
   ];
+
+  // 닉네임 길이에 따른 클래스/속성 결정
+  const getNicknameProps = (nickname) => {
+    if (!nickname) return { className: "username", "data-length": "0" };
+
+    const length = nickname.length;
+
+    if (length > 10) {
+      return {
+        className: "username long-name",
+        "data-length": "10+",
+      };
+    }
+
+    return {
+      className: "username",
+      "data-length": length.toString(),
+    };
+  };
 
   // 유저 정보 가져오기
   useEffect(() => {
@@ -62,19 +70,15 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
           },
         });
         setUser(res.data.data || res.data); // API 응답 구조에 따라 조정
+
       } catch (err) {
         console.error("유저 정보 요청 실패:", err);
-        console.error("에러 상세:", err.response?.data); // 에러 상세 정보
-
-        // 401이나 403 에러인 경우 로그아웃 처리
         if (err.response?.status === 401 || err.response?.status === 403) {
           setIsLoggedIn(false);
           localStorage.removeItem("accessToken");
           sessionStorage.removeItem("accessToken");
           setUser(null);
-        }
-        // 500 에러인 경우 사용자 정보만 null로 설정하고 로그인 상태는 유지
-        else {
+        } else {
           setUser(null);
         }
       }
@@ -82,6 +86,37 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
 
     fetchUser();
   }, [isLoggedIn, setIsLoggedIn]);
+
+  // 🎯 프로필 업데이트 이벤트 리스너 추가
+  useEffect(() => {
+    const handleProfileUpdate = (event) => {
+      console.log("사이드바에서 프로필 업데이트 이벤트 수신:", event.detail);
+      const { user: updatedUser, nickname, profileImageUrl } = event.detail;
+
+      if (updatedUser) {
+        setUser(updatedUser);
+      } else {
+        // 부분 업데이트
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                nickname: nickname || prev.nickname,
+                profileImageUrl: profileImageUrl || prev.profileImageUrl,
+              }
+            : null
+        );
+      }
+    };
+
+    // 이벤트 리스너 등록
+    window.addEventListener("userProfileUpdated", handleProfileUpdate);
+
+    // 클린업
+    return () => {
+      window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -108,17 +143,16 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
   };
 
   const handleMenuClick = (path) => {
-    console.log("메뉴 클릭:", path, "로그인 상태:", isLoggedIn);
-
     if (!isLoggedIn) {
-      console.log("로그인 모달 열기");
       setIsLoginModalOpen(true);
       return;
     }
-
-    console.log("페이지 이동:", path);
     navigate(path);
   };
+
+  // 현재 사용자 닉네임 가져오기
+  const currentNickname = user?.nickname || user?.name || "사용자";
+  const nicknameProps = getNicknameProps(currentNickname);
 
   return (
     <div className="sidebar">
@@ -135,6 +169,7 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
           <div className="profile-box">
             <img
               src={
+                user?.profileImageUrl ||
                 user?.profileImage ||
                 user?.profile_image ||
                 "/default-profile.png"
@@ -144,10 +179,16 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
               onError={(e) => {
                 e.target.src = "/default-profile.png";
               }}
+              // 🎯 이미지 비율 유지를 위한 스타일 추가
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                objectFit: "cover", // 이미지 비율 유지하면서 원형으로 자르기
+                objectPosition: "center",
+              }}
             />
-            <p className="username">
-              {user?.name || user?.nickname || "사용자"}님
-            </p>
+            <p {...nicknameProps}>{currentNickname}님</p>
           </div>
         ) : (
           <div className="profile-box">
@@ -155,8 +196,15 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
               src="/default-profile.png"
               alt="기본 프로필"
               className="sidebar-profile-img"
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                objectPosition: "center",
+              }}
             />
-            <p className="username">로그인이 필요합니다</p>
+            <p className="username login-required">로그인이 필요합니다</p>
           </div>
         )}
 

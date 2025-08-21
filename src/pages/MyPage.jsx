@@ -161,6 +161,9 @@ export default function MyPage() {
     }
   };
 
+  // loadFollowData 함수 추가 (기존 코드에서 사용됨)
+  const loadFollowData = loadFollowDataAlternative;
+
   // 팔로우 정보 새로고침
   const refreshFollowInfo = async () => {
     if (!user?.id) return;
@@ -253,48 +256,158 @@ export default function MyPage() {
       nickname: user?.nickname || "",
       profileImageUrl: user?.profileImageUrl || "",
     });
+    setError(null);
   };
 
   const closeProfileEdit = () => {
+    // editForm을 원래 사용자 정보로 복원
+    setEditForm({
+      nickname: user?.nickname || "",
+      profileImageUrl: user?.profileImageUrl || "",
+    });
     setIsEditingProfile(false);
     setError(null);
     setLoading(false);
   };
 
+  // 🔧 수정된 saveProfile 함수 (괄호 문제 해결)
   const saveProfile = async () => {
     try {
       setLoading(true);
-      const response = await baseApi.put("/user/me", {
-        nickname: editForm.nickname,
-        profileImageUrl: editForm.profileImageUrl,
-      });
+      setError(null);
 
-      if (response.data?.success) {
-        const userResponse = await baseApi.get("/user/me");
-        if (userResponse.data?.success) {
-          const userData = userResponse.data.data;
+      let finalProfileImageUrl = editForm.profileImageUrl;
 
-          const followInfoResponse = await baseApi.get(
-            `/user/${userData.id}/follow-info`
+      // base64 데이터인 경우 (새로 업로드된 이미지)
+      if (
+        editForm.profileImageUrl &&
+        editForm.profileImageUrl.startsWith("data:image/")
+      ) {
+        try {
+          const formData = new FormData();
+          const response = await fetch(editForm.profileImageUrl);
+          const blob = await response.blob();
+          formData.append("profileImage", blob, "profile.jpg");
+
+          const uploadResponse = await baseApi.post(
+            "/user/profile-image",
+            formData
           );
-          const followInfo =
-            followInfoResponse.data?.data || followInfoResponse.data || {};
 
-          const completeUserData = {
-            ...userData,
-            followerCount:
-              followInfo.followerCount ?? userData.followerCount ?? 0,
-            followingCount:
-              followInfo.followingCount ?? userData.followingCount ?? 0,
-          };
+          console.log("이미지 업로드 응답:", uploadResponse.data);
+          console.log(
+            "추출할 URL:",
+            uploadResponse.data?.data?.profileImageUrl
+          );
 
-          setUser(completeUserData);
+          finalProfileImageUrl =
+            uploadResponse.data?.data?.profileImageUrl ||
+            uploadResponse.data?.profileImageUrl ||
+            uploadResponse.data?.data?.url ||
+            uploadResponse.data?.url ||
+            uploadResponse.data?.imageUrl;
+
+          console.log("최종 이미지 URL:", finalProfileImageUrl);
+
+          if (!finalProfileImageUrl) {
+            throw new Error("이미지 업로드 응답에서 URL을 찾을 수 없습니다.");
+          }
+        } catch (uploadError) {
+          console.error("이미지 업로드 실패:", uploadError);
+          setError(`이미지 업로드에 실패했습니다: ${uploadError.message}`);
+          return;
         }
+      }
+
+      // 즉시 로컬 상태 업데이트
+      const updatedUser = {
+        ...user,
+        nickname: editForm.nickname,
+        profileImageUrl: finalProfileImageUrl,
+      };
+      setUser(updatedUser);
+
+      // 프로필 정보 업데이트
+      const updateData = {
+        nickname: editForm.nickname,
+        profileImageUrl: finalProfileImageUrl,
+      };
+
+      const response = await baseApi.put("/user/me", updateData);
+
+      if (response.data?.success || response.status === 200) {
+        setEditForm({
+          nickname: editForm.nickname,
+          profileImageUrl: finalProfileImageUrl,
+        });
+
         setIsEditingProfile(false);
+
+        // 🎯 사이드바 업데이트를 위한 이벤트 발생
+        window.dispatchEvent(
+          new CustomEvent("userProfileUpdated", {
+            detail: {
+              nickname: editForm.nickname,
+              profileImageUrl: finalProfileImageUrl,
+              user: updatedUser,
+            },
+          })
+        );
+
+        // 백그라운드 동기화
+        try {
+          const userResponse = await baseApi.get("/user/me");
+          const userData = userResponse.data?.success
+            ? userResponse.data.data
+            : userResponse.data?.data
+            ? userResponse.data.data
+            : userResponse.data?.nickname
+            ? userResponse.data
+            : null;
+
+          if (userData) {
+            const followInfoResponse = await baseApi.get(
+              `/user/${userData.id}/follow-info`
+            );
+            const followInfo =
+              followInfoResponse.data?.data || followInfoResponse.data || {};
+
+            const completeUserData = {
+              ...userData,
+              followerCount:
+                followInfo.followerCount ?? userData.followerCount ?? 0,
+              followingCount:
+                followInfo.followingCount ?? userData.followingCount ?? 0,
+            };
+
+            setUser(completeUserData);
+
+            // 최종 동기화 이벤트 발생
+            window.dispatchEvent(
+              new CustomEvent("userProfileUpdated", {
+                detail: {
+                  nickname: completeUserData.nickname,
+                  profileImageUrl: completeUserData.profileImageUrl,
+                  user: completeUserData,
+                },
+              })
+            );
+          }
+        } catch (syncError) {
+          console.warn("백그라운드 동기화 실패:", syncError);
+        }
+      } else {
+        setUser(user);
+        setError("프로필 업데이트에 실패했습니다.");
       }
     } catch (e) {
       console.error("프로필 업데이트 실패:", e);
-      setError("프로필 업데이트 중 오류가 발생했습니다.");
+      setUser(user);
+      setError(
+        `프로필 업데이트 중 오류가 발생했습니다: ${
+          e.response?.data?.message || e.message
+        }`
+      );
     } finally {
       setLoading(false);
     }
@@ -304,14 +417,29 @@ export default function MyPage() {
     setEditForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // 수정된 handleImageUpload 함수
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // 파일 크기 체크 (예: 5MB 제한)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("이미지 파일은 5MB 이하여야 합니다.");
+      return;
+    }
+
+    // 파일 타입 체크
+    if (!file.type.startsWith("image/")) {
+      setError("이미지 파일만 업로드 가능합니다.");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
+      const result = event.target.result;
       setEditForm((prev) => ({
         ...prev,
-        profileImageUrl: event.target.result,
+        profileImageUrl: result,
       }));
     };
     reader.readAsDataURL(file);
@@ -336,7 +464,7 @@ export default function MyPage() {
 
       {/* 헤더 네비게이션 */}
       <div className="myp-header-nav">
-        <h1 className="myp-header-title">마이페이지</h1>
+        <h3 className="myp-header-title">마이페이지</h3>
       </div>
 
       {/* 헤더 */}
@@ -348,6 +476,13 @@ export default function MyPage() {
             "https://www.studiopeople.kr/common/img/default_profile.png"
           }
           alt="프로필"
+          style={{
+            width: "120px",
+            height: "120px",
+            borderRadius: "50%",
+            objectFit: "cover",
+            objectPosition: "center",
+          }}
         />
         <h1 className="myp-name">{user?.nickname}</h1>
         <button className="myp-edit-btn" onClick={openProfileEdit}>
@@ -456,6 +591,13 @@ export default function MyPage() {
                       }
                       alt={post?.author?.nickname || "작성자"}
                       className="myp-card-avatar"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                      }}
                     />
                     <div className="myp-card-info">
                       <div className="myp-meta">
@@ -535,6 +677,13 @@ export default function MyPage() {
                       }
                       alt="프로필 미리보기"
                       className="myp-preview-image"
+                      style={{
+                        width: "100px",
+                        height: "100px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                      }}
                     />
                   </div>
                   <div className="myp-upload-buttons">
@@ -548,6 +697,19 @@ export default function MyPage() {
                     <label htmlFor="imageUpload" className="myp-upload-btn">
                       이미지 선택
                     </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          profileImageUrl:
+                            "https://www.studiopeople.kr/common/img/default_profile.png",
+                        }))
+                      }
+                      className="myp-default-btn"
+                    >
+                      기본 이미지
+                    </button>
                     <input
                       type="url"
                       placeholder="또는 이미지 URL 입력"
@@ -621,7 +783,14 @@ export default function MyPage() {
                         alt={person.nickname || person.name}
                         className="myp-user-avatar"
                         onClick={() => handleUserProfileClick(person.id)}
-                        style={{ cursor: "pointer" }}
+                        style={{
+                          cursor: "pointer",
+                          width: "50px",
+                          height: "50px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          objectPosition: "center",
+                        }}
                       />
                       <div className="myp-user-info">
                         <span

@@ -107,19 +107,63 @@ export default function ProfilePage() {
     })();
   }, [userId]);
 
-  // 팔로워/팔로잉 데이터 로드 (수정된 엔드포인트)
+  // 팔로워/팔로잉 데이터 로드 (API 명세서에 맞게 수정)
   const loadFollowData = async (type) => {
     if (!user?.id) return;
     try {
       setLoading(true);
       setError(null);
 
-      const response = await baseApi.get(`/user/${user.id}/${type}`);
+      console.log(`Loading ${type} for user ${user.id}`); // 디버깅용
+
+      // API 명세서에 따른 올바른 엔드포인트 사용
+      const endpoint =
+        type === "followers"
+          ? `/user/${user.id}/followers` // 팔로워 목록
+          : `/user/${user.id}/following`; // 팔로잉 목록
+
+      const response = await baseApi.get(endpoint);
+      console.log(`${type} response:`, response.data); // 디버깅용
 
       if (type === "followers") {
-        setFollowers(response.data?.data || response.data || []);
+        // 다양한 응답 구조 처리
+        let followersData = [];
+        if (Array.isArray(response.data)) {
+          followersData = response.data;
+        } else if (Array.isArray(response.data?.data)) {
+          followersData = response.data.data;
+        } else if (Array.isArray(response.data?.content)) {
+          followersData = response.data.content;
+        } else if (
+          response.data?.followers &&
+          Array.isArray(response.data.followers)
+        ) {
+          followersData = response.data.followers;
+        } else {
+          console.warn("Followers data is not an array:", response.data);
+          followersData = [];
+        }
+        console.log("Processed followers data:", followersData); // 디버깅용
+        setFollowers(followersData);
       } else {
-        const followingData = response.data?.data || response.data || [];
+        // 팔로잉 데이터도 동일하게 처리
+        let followingData = [];
+        if (Array.isArray(response.data)) {
+          followingData = response.data;
+        } else if (Array.isArray(response.data?.data)) {
+          followingData = response.data.data;
+        } else if (Array.isArray(response.data?.content)) {
+          followingData = response.data.content;
+        } else if (
+          response.data?.following &&
+          Array.isArray(response.data.following)
+        ) {
+          followingData = response.data.following;
+        } else {
+          console.warn("Following data is not an array:", response.data);
+          followingData = [];
+        }
+        console.log("Processed following data:", followingData); // 디버깅용
         setFollowing(followingData);
         setFollowingUsers(new Set(followingData.map((u) => u.id)));
       }
@@ -389,8 +433,17 @@ export default function ProfilePage() {
               </button>
             </div>
             <div className="profile-modal-body">
-              {loading ? (
+              {error ? (
+                <div className="profile-modal-error">{error}</div>
+              ) : loading ? (
                 <div className="profile-modal-loading">로딩 중...</div>
+              ) : (modalType === "followers" ? followers : following).length ===
+                0 ? (
+                <div className="profile-modal-empty">
+                  {modalType === "followers"
+                    ? "팔로워가 없습니다."
+                    : "팔로잉이 없습니다."}
+                </div>
               ) : (
                 (modalType === "followers" ? followers : following).map(
                   (person) => (
