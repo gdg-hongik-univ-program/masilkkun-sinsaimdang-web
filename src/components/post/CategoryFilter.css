@@ -1,0 +1,27 @@
+.category-select-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.category-select-chip {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  background: white;
+  color: #6c757d;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.category-select-chip:hover {
+  border-color: #9a7937;
+}
+
+.category-select-chip.selected {
+  background: #9a7937;
+  color: white;
+  border-color: #9a7937;
+}

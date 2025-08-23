@@ -1,209 +1,281 @@
-import React, { useEffect, useRef } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import { useLocation } from "react-router-dom";
 import "./Mapview.css";
 
-const Mapview = () => {
+const Mapview = forwardRef(({ onSelectPlace }, ref) => {
   const location = useLocation();
   const isMyPage = location.pathname === "/mypage";
-  const isPostPage = location.pathname.includes("/postlist");
+  const isPostPage = location.pathname.includes("/create");
 
+  const [showSearch, setShowSearch] = useState(false);
   const mapRef = useRef(null);
+  const markersRef = useRef([]);
+  const psRef = useRef(null);
+  const infowindowRef = useRef(null);
+  const keywordRef = useRef(null);
+  const listRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const [onSelectPlaceCallback, setOnSelectPlaceCallback] = useState(null);
 
+  // 부모 컴포넌트에서 호출 가능
+  useImperativeHandle(ref, () => ({
+    openSearch: () => setShowSearch(true),
+    closeSearch: () => setShowSearch(false),
+    setOnSelectPlace: (callback) => setOnSelectPlaceCallback(() => callback),
+  }));
+
+  const handlePlaceClick = (place) => {
+    if (onSelectPlaceCallback) onSelectPlaceCallback(place);
+    setShowSearch(false);
+  };
+
+  const removeMarkers = () => {
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+  };
+
+  const searchPlaces = (keyword) => {
+    if (!keyword?.trim() || !psRef.current || !mapInstanceRef.current) return;
+
+    psRef.current.keywordSearch(keyword, (data, status) => {
+      if (status === window.kakao.maps.services.Status.OK) {
+        removeMarkers();
+        const bounds = new window.kakao.maps.LatLngBounds();
+        const listEl = listRef.current;
+        if (listEl) listEl.innerHTML = "";
+
+        data.forEach((place, i) => {
+          const position = new window.kakao.maps.LatLng(place.y, place.x);
+
+          const imageSrc = "/marker2.png";
+          const imageSize = new window.kakao.maps.Size(36, 37);
+          const imgOptions = {
+            spriteSize: new window.kakao.maps.Size(36, 691),
+            spriteOrigin: new window.kakao.maps.Point(0, i * 46 + 10),
+            offset: new window.kakao.maps.Point(13, 37),
+          };
+          const markerImage = new window.kakao.maps.MarkerImage(
+            imageSrc,
+            imageSize,
+            imgOptions
+          );
+
+          const marker = new window.kakao.maps.Marker({
+            map: mapInstanceRef.current,
+            position,
+            image: markerImage,
+          });
+          markersRef.current.push(marker);
+
+          window.kakao.maps.event.addListener(marker, "click", () => {
+            mapInstanceRef.current.setLevel(3, { animate: true });
+            infowindowRef.current.setContent(`<div>${place.place_name}</div>`);
+            infowindowRef.current.open(mapInstanceRef.current, marker);
+          });
+
+          window.kakao.maps.event.addListener(marker, "mouseover", () => {
+            infowindowRef.current.setContent(
+              `<div style="padding:5px;font-size:13px;">${place.place_name}</div>`
+            );
+            infowindowRef.current.open(mapInstanceRef.current, marker);
+          });
+
+          window.kakao.maps.event.addListener(marker, "mouseout", () =>
+            infowindowRef.current.close()
+          );
+
+          if (listEl) {
+            const li = document.createElement("li");
+            li.className = "item";
+            li.innerHTML = `
+              <span class="markerbg marker_${i + 1}"></span>
+              <div class="info">
+                <h5>${place.place_name}</h5>
+                ${place.road_address_name || place.address_name}
+              </div>
+            `;
+            li.style.cursor = "pointer";
+            li.onmouseover = () => {
+              infowindowRef.current.setContent(
+                `<div style="padding:5px;font-size:13px;">${place.place_name}</div>`
+              );
+              infowindowRef.current.open(mapInstanceRef.current, marker);
+            };
+            li.onmouseout = () => infowindowRef.current.close();
+            li.onclick = () => {
+              mapInstanceRef.current.setLevel(3, { animate: true });
+              mapInstanceRef.current.panTo(position);
+              handlePlaceClick({
+                placeName: place.place_name,
+                address: place.road_address_name || place.address_name,
+              });
+            };
+            listEl.appendChild(li);
+          }
+
+          bounds.extend(position);
+        });
+
+        if (data.length > 0) {
+          const firstPlace = data[0];
+          const firstPosition = new window.kakao.maps.LatLng(
+            firstPlace.y,
+            firstPlace.x
+          );
+          mapInstanceRef.current.setLevel(3, { animate: true });
+          mapInstanceRef.current.panTo(firstPosition);
+        }
+      } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
+        alert("검색 결과가 없습니다.");
+      } else if (status === window.kakao.maps.services.Status.ERROR) {
+        alert("검색 중 오류가 발생했습니다.");
+      }
+    });
+  };
+
+  // 지도 초기화 + 폴리곤 복원
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // kakao SDK 로드
     const script = document.createElement("script");
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
       import.meta.env.VITE_MAP_API
-    }&libraries=services,clusterer&autoload=false`;
+    }&libraries=services&autoload=false`;
     script.onload = () => {
       window.kakao.maps.load(() => {
         const kakao = window.kakao;
-        const container = mapRef.current;
+        const map = new kakao.maps.Map(mapRef.current, {
+          center: new kakao.maps.LatLng(37.566826, 126.9786567),
+          level: isMyPage ? 13 : 3,
+        });
+        mapInstanceRef.current = map;
+        psRef.current = new kakao.maps.services.Places();
+        infowindowRef.current = new kakao.maps.InfoWindow({ zIndex: 1 });
 
-        const options = isPostPage
-          ? {
-              center: new kakao.maps.LatLng(37.2869619, 127.011801),
-              level: 4,
-              disableDoubleClickZoom: true,
-              disableZoomAnimation: true,
-            }
-          : {
-              center: new kakao.maps.LatLng(37.551, 126.926),
-              level: 13,
-              disableDoubleClickZoom: true,
-              disableZoomAnimation: true,
-            };
+        // 폴리곤 로딩
+        let detailMode = false;
+        let polygons = [];
+        let areas = [];
 
-        const mapInstance = new kakao.maps.Map(container, options);
-
-        // === Post 페이지: 마커 + 선 ===
-        if (isPostPage) {
-          const MARKER_WIDTH = 33,
-            MARKER_HEIGHT = 36,
-            OFFSET_X = 12,
-            OFFSET_Y = MARKER_HEIGHT,
-            OVER_MARKER_WIDTH = 40,
-            OVER_MARKER_HEIGHT = 42,
-            OVER_OFFSET_X = 13,
-            OVER_OFFSET_Y = OVER_MARKER_HEIGHT,
-            SPRITE_MARKER_URL = "/marker.png",
-            SPRITE_WIDTH = 126,
-            SPRITE_HEIGHT = 146,
-            SPRITE_GAP = 10;
-
-          const markerSize = new kakao.maps.Size(MARKER_WIDTH, MARKER_HEIGHT);
-          const markerOffset = new kakao.maps.Point(OFFSET_X, OFFSET_Y);
-          const overMarkerSize = new kakao.maps.Size(
-            OVER_MARKER_WIDTH,
-            OVER_MARKER_HEIGHT
-          );
-          const overMarkerOffset = new kakao.maps.Point(
-            OVER_OFFSET_X,
-            OVER_OFFSET_Y
-          );
-          const spriteImageSize = new kakao.maps.Size(
-            SPRITE_WIDTH,
-            SPRITE_HEIGHT
-          );
-
-          const positions = [
-            new kakao.maps.LatLng(37.2869619, 127.011801),
-            new kakao.maps.LatLng(37.2821351915, 127.0190947768),
-            new kakao.maps.LatLng(37.2884234215, 127.0229636943),
-          ];
-
-          let selectedMarker = null;
-          const createMarkerImage = (size, offset, origin) =>
-            new kakao.maps.MarkerImage(SPRITE_MARKER_URL, size, {
-              offset,
-              spriteOrigin: origin,
-              spriteSize: spriteImageSize,
-            });
-
-          positions.forEach((position, index) => {
-            const gapX = MARKER_WIDTH + SPRITE_GAP;
-            const originY = (MARKER_HEIGHT + SPRITE_GAP) * index;
-            const overOriginY = (OVER_MARKER_HEIGHT + SPRITE_GAP) * index;
-
-            const normalImage = createMarkerImage(
-              markerSize,
-              markerOffset,
-              new kakao.maps.Point(0, originY)
-            );
-            const clickImage = createMarkerImage(
-              markerSize,
-              markerOffset,
-              new kakao.maps.Point(gapX, originY)
-            );
-            const overImage = createMarkerImage(
-              overMarkerSize,
-              overMarkerOffset,
-              new kakao.maps.Point(gapX * 2, overOriginY)
-            );
-
-            const marker = new kakao.maps.Marker({
-              map: mapInstance,
-              position,
-              image: normalImage,
-            });
-            marker.normalImage = normalImage;
-
-            kakao.maps.event.addListener(marker, "mouseover", () => {
-              if (!selectedMarker || selectedMarker !== marker)
-                marker.setImage(overImage);
-            });
-            kakao.maps.event.addListener(marker, "mouseout", () => {
-              if (!selectedMarker || selectedMarker !== marker)
-                marker.setImage(normalImage);
-            });
-            kakao.maps.event.addListener(marker, "click", () => {
-              if (!selectedMarker || selectedMarker !== marker) {
-                if (selectedMarker)
-                  selectedMarker.setImage(selectedMarker.normalImage);
-                marker.setImage(clickImage);
-              }
-              selectedMarker = marker;
-            });
-          });
-
-          const polyline = new kakao.maps.Polyline({
-            path: positions,
-            strokeWeight: 4,
-            strokeColor: "#ff0000ff",
-            strokeOpacity: 1,
-            strokeStyle: "solid",
-          });
-          polyline.setMap(mapInstance);
+        function clearPolygons() {
+          polygons.forEach((poly) => poly.setMap(null));
+          polygons = [];
+          areas = [];
         }
 
-        // === 마이페이지: 폴리곤 ===
-        if (isMyPage) {
-          let polygons = [];
-          let isSelected = false;
-          const clearPolygons = () => {
-            polygons.forEach((poly) => poly.setMap(null));
-            polygons = [];
-          };
+        async function loadGeoJson(path) {
+          const res = await fetch(path);
+          const geojson = await res.json();
+          const features = geojson.features;
 
-          const loadGeoJson = async (path) => {
-            const res = await fetch(path);
-            const geojson = await res.json();
-            geojson.features.forEach((unit) => {
-              const coords = unit.geometry.coordinates[0];
-              const path = coords.map(
-                (coord) => new kakao.maps.LatLng(coord[1], coord[0])
+          areas = features.map((unit) => {
+            const coords = unit.geometry.coordinates[0];
+            const name = unit.properties.SIG_KOR_NM;
+            const code = unit.properties.SIG_CD;
+            let paths = [];
+
+            if (unit.geometry.type === "Polygon") {
+              paths = unit.geometry.coordinates.map((ring) =>
+                ring.map((coord) => new kakao.maps.LatLng(coord[1], coord[0]))
               );
-              const polygon = new kakao.maps.Polygon({
-                map: mapInstance,
-                path,
-                strokeWeight: 2,
-                strokeColor: "#004c80",
-                strokeOpacity: 0.8,
-                fillColor: "#fff",
-                fillOpacity: 0.7,
-              });
-              kakao.maps.event.addListener(polygon, "click", () => {
-                isSelected = !isSelected;
-                polygon.setOptions({
-                  fillColor: isSelected ? "#FF6347" : "#fff",
-                  fillOpacity: 0.7,
+            }
+            // MultiPolygon: [ [ [ [lng, lat], ... ] ], [ [lng, lat], ... ] ]
+            else if (unit.geometry.type === "MultiPolygon") {
+              unit.geometry.coordinates.forEach((polygon) => {
+                polygon.forEach((ring) => {
+                  paths.push(
+                    ring.map(
+                      (coord) => new kakao.maps.LatLng(coord[1], coord[0])
+                    )
+                  );
                 });
               });
-              polygons.push(polygon);
+            }
+
+            return { name, location: code, paths };
+          });
+          areas.forEach(drawPolygon);
+        }
+
+        function drawPolygon(area) {
+          const polygon = new kakao.maps.Polygon({
+            map,
+            path: area.paths,
+            strokeWeight: 2,
+            strokeColor: "#004c80",
+            strokeOpacity: 0.8,
+            fillColor: "#fff",
+            fillOpacity: 0.7,
+          });
+          polygons.push(polygon);
+
+          let isSelected = false;
+          kakao.maps.event.addListener(polygon, "click", () => {
+            isSelected = !isSelected;
+            polygon.setOptions({
+              fillColor: isSelected ? "#FF6347" : "#fff",
+              fillOpacity: 0.7,
             });
-          };
-
-          // 초기 시/도 로드
-          loadGeoJson("/json/sido.json");
-
-          // 확대/축소 시 폴리곤 변경
-          kakao.maps.event.addListener(mapInstance, "zoom_changed", () => {
-            const level = mapInstance.getLevel();
-            clearPolygons();
-            if (level <= 10) loadGeoJson("/json/sig.json");
-            else loadGeoJson("/json/sido.json");
           });
         }
 
-        // === 지도 UI 컨트롤 ===
+        if (isMyPage) {
+          loadGeoJson("/json/sido.json");
+
+          kakao.maps.event.addListener(map, "zoom_changed", () => {
+            const level = map.getLevel();
+            if (!detailMode && level <= 10) {
+              detailMode = true;
+              clearPolygons();
+              loadGeoJson("/json/sig.json");
+            } else if (detailMode && level > 10) {
+              detailMode = false;
+              clearPolygons();
+              loadGeoJson("/json/sido.json");
+            }
+          });
+        }
+
+        // 컨트롤 UI
         const mapTypeControl = new kakao.maps.MapTypeControl();
-        mapInstance.addControl(
-          mapTypeControl,
-          kakao.maps.ControlPosition.TOPRIGHT
-        );
+        map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
 
         const zoomControl = new kakao.maps.ZoomControl();
-        mapInstance.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+        map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
       });
     };
     document.head.appendChild(script);
   }, [location.pathname]);
 
   return (
-    <div id="map" ref={mapRef} style={{ width: "100%", height: "100%" }} />
+    <div className="map_wrap">
+      {isPostPage && showSearch && (
+        <div id="menu_wrap" className="bg_white">
+          <form id="searchForm" onSubmit={(e) => e.preventDefault()}>
+            키워드: <input type="text" ref={keywordRef} size="15" />
+            <button
+              type="button"
+              onClick={() => searchPlaces(keywordRef.current.value)}
+            >
+              검색
+            </button>
+          </form>
+          <ul ref={listRef} id="placesList"></ul>
+        </div>
+      )}
+      <div
+        id="map"
+        ref={mapRef}
+        style={{ width: "100%", height: "100%" }}
+      ></div>
+    </div>
   );
-};
+});
 
 export default Mapview;

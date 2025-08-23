@@ -1,18 +1,35 @@
-// src/components/common/CategoryFilter.jsx
 import React from "react";
+import "./CategoryFilter.css";
 
-const CategoryFilter = ({ selectedCategory, onCategoryChange }) => {
-  const categories = ["여행지", "맛집", "카페"];
+const CategoryFilter = ({ selectedCategories = [], onCategoryChange }) => {
+  const tagOptions = [
+    { label: "여행지", value: "TRAVEL_SPOT" },
+    { label: "맛집", value: "RESTAURANT" },
+    { label: "카페", value: "CAFE" },
+  ];
+
+  const toggleTag = (tag) => {
+    if (selectedCategories.some((t) => t.value === tag.value)) {
+      onCategoryChange(selectedCategories.filter((t) => t.value !== tag.value));
+    } else {
+      onCategoryChange([...selectedCategories, tag]);
+    }
+  };
 
   return (
-    <div className="category-btns">
-      {categories.map((cat) => (
+    <div className="category-select-container">
+      {tagOptions.map((tag) => (
         <button
-          key={cat}
-          className={`category-btn ${selectedCategory === cat ? "active" : ""}`}
-          onClick={() => onCategoryChange(cat)}
+          key={tag.value}
+          className={`category-select-chip ${
+            selectedCategories.some((t) => t.value === tag.value)
+              ? "selected"
+              : ""
+          }`}
+          onClick={() => toggleTag(tag)}
+          type="button"
         >
-          {cat}
+          {tag.label}
         </button>
       ))}
     </div>

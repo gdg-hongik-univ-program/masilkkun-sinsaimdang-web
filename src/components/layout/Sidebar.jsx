@@ -69,8 +69,8 @@ const Sidebar = ({ isLoggedIn, setIsLoggedIn, setIsLoginModalOpen }) => {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log("유저 데이터:", res.data);
-        setUser(res.data.data || res.data);
+        setUser(res.data.data || res.data); // API 응답 구조에 따라 조정
+
       } catch (err) {
         console.error("유저 정보 요청 실패:", err);
         if (err.response?.status === 401 || err.response?.status === 403) {

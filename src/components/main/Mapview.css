@@ -44,3 +44,86 @@
   font-weight: bold;
   color: red;
 }
+
+#placesList .item {
+  position: relative;
+  border-bottom: 1px solid #eee;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 65px;
+  padding-left: 50px; /* 아이콘 공간 */
+  display: flex; /* flex로 정렬 */
+  align-items: center; /* 세로 중앙 */
+}
+
+#placesList .item .info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 세로 중앙 */
+}
+
+#placesList .markerbg {
+  position: absolute;
+  top: 50%;
+  left: 5px; /* 아이템의 왼쪽에 붙이기 */
+  transform: translateY(-50%); /* 세로 중앙 정렬 */
+  width: 36px;
+  height: 37px;
+  background: url("/marker2.png") no-repeat;
+  background-size: 36px auto; /* 혹시 스케일 깨지면 자동 맞추기 */
+}
+
+#placesList .marker_1 {
+  background-position: 0 -10px;
+}
+#placesList .marker_2 {
+  background-position: 0 -56px;
+}
+#placesList .marker_3 {
+  background-position: 0 -102px;
+}
+#placesList .marker_4 {
+  background-position: 0 -148px;
+}
+#placesList .marker_5 {
+  background-position: 0 -194px;
+}
+#placesList .marker_6 {
+  background-position: 0 -240px;
+}
+#placesList .marker_7 {
+  background-position: 0 -286px;
+}
+#placesList .marker_8 {
+  background-position: 0 -332px;
+}
+#placesList .marker_9 {
+  background-position: 0 -378px;
+}
+#placesList .marker_10 {
+  background-position: 0 -423px;
+}
+
+#searchForm input[type="text"] {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+#searchForm button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+  margin: 2px;
+}
+
+#searchForm button:hover {
+  background-color: #45a049;
+}

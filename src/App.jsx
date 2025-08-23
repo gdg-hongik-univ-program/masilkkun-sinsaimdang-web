@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom"; // 👈 useNavigate 추가
 import { CategoryProvider } from "./context/CategoryContext";
 import Sidebar from "./components/layout/Sidebar";
@@ -20,8 +20,15 @@ const App = () => {
   const [sortOrder, setSortOrder] = useState("기본순");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
+  const mapRef = useRef(null); // Mapview ref
   const navigate = useNavigate(); // 👈 useNavigate 선언
+
+  const handleSelectPlace = (selectedPlace) => {
+    // PostCreatePage에서 사용할 콜백
+    if (mapRef.current?.onSelectPlace) {
+      mapRef.current.onSelectPlace(selectedPlace);
+    }
+  };
 
   useEffect(() => {
     const token =
@@ -70,7 +77,10 @@ const App = () => {
                   />
                 }
               />
-              <Route path="create" element={<PostCreatePage />} />
+              <Route
+                path="create"
+                element={<PostCreatePage mapRef={mapRef} />}
+              />
               <Route path="post/:id" element={<PostCoursePage />} />
               <Route path="certification" element={<CertificationPage />} />
               <Route path="scrapbook" element={<ScrapbookPage />} />
@@ -81,7 +91,7 @@ const App = () => {
           </div>
         </div>
         <div className="right-section">
-          <Mapview />
+          <Mapview ref={mapRef} />
         </div>
         <LoginRegisterModal
           isOpen={isLoginModalOpen}
