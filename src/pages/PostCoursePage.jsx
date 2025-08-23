@@ -16,6 +16,25 @@ const PostCoursePage = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [scrapCount, setScrapCount] = useState(0);
 
+  // ============================
+  // ✅ 추가: 리스트와 동기화를 위한 sessionStorage 키/유틸
+  // ============================
+  const SCRAP_MAP_KEY = "scrapMap"; // { [postId]: true/false }
+  const SCRAP_COUNT_MAP_KEY = "scrapCountMap"; // { [postId]: number }
+
+  const readMap = (key) => {
+    try {
+      return JSON.parse(sessionStorage.getItem(key) || "{}");
+    } catch {
+      return {};
+    }
+  };
+  const writeMap = (key, obj) => {
+    try {
+      sessionStorage.setItem(key, JSON.stringify(obj));
+    } catch {}
+  };
+
   const handleGoBack = () => {
     console.log("뒤로가기 버튼 클릭");
     navigate(-1);
@@ -81,12 +100,26 @@ const PostCoursePage = () => {
         await baseApi.delete(`articles/${id}/scraps`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        // ============================
+        // ✅ 추가: 상태/카운트 & sessionStorage 동기화
+        // ============================
         setIsScraped(false);
-        setScrapCount((prev) => prev - 1);
+        setScrapCount((prev) => Math.max(0, prev - 1));
+
+        const m = readMap(SCRAP_MAP_KEY);
+        m[id] = false;
+        writeMap(SCRAP_MAP_KEY, m);
+
+        const c = readMap(SCRAP_COUNT_MAP_KEY);
+        c[id] = Math.max(0, (c[id] ?? scrapCount) - 1);
+        writeMap(SCRAP_COUNT_MAP_KEY, c);
+
         console.log("✅ 스크랩 취소 완료");
         alert("스크랩이 취소되었습니다.");
       } else {
         console.log("스크랩 추가 시도:", id);
+
         // POST 방식으로 스크랩 추가 - 여러 방법 시도
         try {
           // 방법 1: 빈 객체
@@ -116,8 +149,20 @@ const PostCoursePage = () => {
           }
         }
 
+        // ============================
+        // ✅ 추가: 상태/카운트 & sessionStorage 동기화
+        // ============================
         setIsScraped(true);
         setScrapCount((prev) => prev + 1);
+
+        const m = readMap(SCRAP_MAP_KEY);
+        m[id] = true;
+        writeMap(SCRAP_MAP_KEY, m);
+
+        const c = readMap(SCRAP_COUNT_MAP_KEY);
+        c[id] = (c[id] ?? scrapCount) + 1;
+        writeMap(SCRAP_COUNT_MAP_KEY, c);
+
         console.log("✅ 스크랩 추가 완료");
         alert("스크랩에 추가되었습니다.");
       }
@@ -127,17 +172,53 @@ const PostCoursePage = () => {
       console.error("에러 데이터:", err.response?.data);
       console.error("에러 메시지:", err.response?.data?.message);
 
-      if (err.response?.status === 401) {
+      const status = err.response?.status;
+      const message = err.response?.data?.message || "";
+
+      if (status === 401) {
         alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
-      } else if (err.response?.status === 400) {
-        const message = err.response?.data?.message;
-        if (message && message.includes("이미")) {
-          alert("이미 스크랩된 게시글입니다.");
-          setIsScraped(true); // 상태 동기화
-        } else {
-          alert("잘못된 요청입니다. 다시 시도해주세요.");
+      } else if (status === 400) {
+        // ==========================================
+        // ✅ 핵심: 리스트 UI가 뒤쳐졌을 때 한 번에 '취소'
+        // (UI는 false였지만 서버는 이미 스크랩 상태 → 바로 DELETE 호출)
+        // ==========================================
+        if (!isScraped && /이미/.test(message)) {
+          try {
+            await baseApi.delete(`articles/${id}/scraps`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+            setIsScraped(false);
+            setScrapCount((prev) => Math.max(0, prev - 1));
+
+            const m = readMap(SCRAP_MAP_KEY);
+            m[id] = false;
+            writeMap(SCRAP_MAP_KEY, m);
+
+            const c = readMap(SCRAP_COUNT_MAP_KEY);
+            c[id] = Math.max(0, (c[id] ?? scrapCount) - 1);
+            writeMap(SCRAP_COUNT_MAP_KEY, c);
+
+            console.log("✅ (자동) 이미 스크랩 → 즉시 취소 처리 완료");
+            return; // 한 번의 클릭으로 종료
+          } catch (e2) {
+            console.error("자동 취소도 실패:", e2);
+          }
         }
-      } else if (err.response?.status === 409) {
+
+        if (isScraped && /스크랩하지\s*않은/.test(message)) {
+          // 반대 케이스: UI는 true인데 서버는 이미 취소됨 → UI만 맞춤
+          setIsScraped(false);
+          setScrapCount((prev) => Math.max(0, prev - 1));
+
+          const m = readMap(SCRAP_MAP_KEY);
+          m[id] = false;
+          writeMap(SCRAP_MAP_KEY, m);
+          return;
+        }
+
+        alert("잘못된 요청입니다. 다시 시도해주세요.");
+      } else if (status === 409) {
         alert("이미 스크랩된 게시글입니다.");
         setIsScraped(true);
       } else {
@@ -175,6 +256,18 @@ const PostCoursePage = () => {
         setIsScraped(postData.isScraped || false);
         setLikeCount(postData.likeCount || 0);
         setScrapCount(postData.scrapCount || 0);
+
+        // ==========================================
+        // ✅ 추가(권장): 상세 초기 로딩 시 sessionStorage에도 반영
+        // → 뒤로가기 했을 때 리스트가 바로 반영됨
+        // ==========================================
+        const m = readMap(SCRAP_MAP_KEY);
+        m[id] = !!postData.isScraped;
+        writeMap(SCRAP_MAP_KEY, m);
+
+        const c = readMap(SCRAP_COUNT_MAP_KEY);
+        c[id] = Number(postData.scrapCount || 0);
+        writeMap(SCRAP_COUNT_MAP_KEY, c);
 
         console.log("초기 상태 설정:");
         console.log("- 좋아요:", postData.isLiked, "개수:", postData.likeCount);
