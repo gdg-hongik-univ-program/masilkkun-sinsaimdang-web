@@ -8,20 +8,33 @@ const baseApi = axios.create({
 
 // 요청 인터셉터: 저장소에서 accessToken 읽어서 헤더에 실어주기
 baseApi.interceptors.request.use((config) => {
+  // sessionStorage 우선으로 토큰 확인
   const token =
-    localStorage.getItem("accessToken") ||
-    sessionStorage.getItem("accessToken");
+    sessionStorage.getItem("accessToken") ||
+    localStorage.getItem("accessToken");
+
+  console.log(
+    "인터셉터에서 찾은 토큰:",
+    token ? token.substring(0, 20) + "..." : "없음"
+  );
 
   if (token) {
-    // 토큰이 이상하면 이전 쓰레기값을 치움
-    const isAscii = /^[\x00-\x7F]+$/.test(token);
-    if (isAscii) {
+    // JWT 토큰 기본 검증 (점으로 구분된 3부분)
+    const isValidJWT = token.split(".").length === 3;
+
+    if (isValidJWT) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log(
+        "Authorization 헤더 설정됨:",
+        `Bearer ${token.substring(0, 20)}...`
+      );
     } else {
       localStorage.removeItem("accessToken");
       sessionStorage.removeItem("accessToken");
-      console.warn("Invalid accessToken removed");
+      console.warn("Invalid JWT token removed");
     }
+  } else {
+    console.log("토큰이 없음 - Authorization 헤더 설정 안 함");
   }
 
   return config;

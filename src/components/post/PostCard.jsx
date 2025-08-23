@@ -1,71 +1,143 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "./PostCard.css";
 import { FaHeart, FaBookmark } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import baseApi from "../../api/baseApi";
 
 const PostCard = ({ post }) => {
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const [liked, setLiked] = useState(false); // 표시 상태
+  const [bookmarked, setBookmarked] = useState(false); // 표시 상태
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [bookmarkCount, setBookmarkCount] = useState(post.scrapCount || 0);
 
   const navigate = useNavigate();
 
+  // 🔸 리스트가 상세에서의 변경을 알고 시작하도록 초기 동기화
+  useEffect(() => {
+    setLiked(!!post.isLiked);
+    setBookmarked(!!post.isScraped);
+    setLikeCount(post.likeCount ?? 0);
+    setBookmarkCount(post.scrapCount ?? 0);
+  }, [post.id, post.isLiked, post.isScraped, post.likeCount, post.scrapCount]);
+
   const handleCardClick = () => {
-    // PostCoursePage로 이동
     navigate(`/post/${post.id}`);
   };
 
   const handleProfileClick = (e) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 방지
+    e.stopPropagation();
     const authorId = post.author?.id || post.authorId;
     if (authorId) {
       navigate(`/profile/${authorId}`);
     }
   };
 
-  const toggleLike = (e) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 방지
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+  const safeGetToken = () => {
+    try {
+      if (typeof window !== "undefined") {
+        return (
+          (typeof sessionStorage !== "undefined"
+            ? sessionStorage.getItem("accessToken")
+            : null) ||
+          (typeof localStorage !== "undefined"
+            ? localStorage.getItem("accessToken")
+            : null)
+        );
+      }
+    } catch (_) {}
+    return null;
+  };
+
+  const toggleLike = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const token = safeGetToken();
+    if (!token) {
+      alert("로그인이 필요합니다. (좋아요)");
+      return;
+    }
+
+    try {
+      if (!liked) {
+        await baseApi.post(`/articles/${post.id}/likes`);
+        setLiked(true);
+        setLikeCount((prev) => prev + 1);
+      } else {
+        await baseApi.delete(`/articles/${post.id}/likes`);
+        setLiked(false);
+        setLikeCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || "";
+      const status = err.response?.status;
+
+      // 서버는 이미 좋아요 상태인데 UI가 뒤쳐져 있었다면 → 즉시 취소 호출
+      if (!liked && status === 400 && /이미\s*좋아요/i.test(msg)) {
+        try {
+          await baseApi.delete(`/articles/${post.id}/likes`);
+          setLiked(false);
+          setLikeCount((prev) => Math.max(0, prev - 1));
+          return;
+        } catch {}
+      }
+
+      // 반대로 UI는 true인데 서버는 이미 취소됨
+      if (liked && status === 400 && /좋아요를\s*누르지\s*않은/i.test(msg)) {
+        setLiked(false);
+        setLikeCount((prev) => Math.max(0, prev - 1));
+        return;
+      }
+
+      alert(`좋아요 처리 중 오류가 발생했습니다. ${msg ? `(${msg})` : ""}`);
+    }
   };
 
   const toggleBookmark = async (e) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 방지
-    const token = localStorage.getItem("accessToken");
+    e.stopPropagation();
+    e.preventDefault();
+
+    const token = safeGetToken();
     if (!token) {
-      alert("로그인이 필요합니다.");
+      alert("로그인이 필요합니다. (스크랩)");
       return;
     }
 
     try {
       if (!bookmarked) {
         // 스크랩 추가
-        await baseApi.post(
-          `/articles/${post.id}/scraps`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await baseApi.post(`/articles/${post.id}/scraps`);
         setBookmarked(true);
         setBookmarkCount((prev) => prev + 1);
       } else {
         // 스크랩 취소
-        await baseApi.delete(`/articles/${post.id}/scraps`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await baseApi.delete(`/articles/${post.id}/scraps`);
         setBookmarked(false);
-        setBookmarkCount((prev) => prev - 1);
+        setBookmarkCount((prev) => Math.max(0, prev - 1));
       }
     } catch (err) {
-      console.error("스크랩 처리 실패:", err);
-      alert("스크랩 처리 중 오류가 발생했습니다.");
+      const msg = err.response?.data?.message || "";
+      const status = err.response?.status;
+
+      // 🔥 상세에서 이미 스크랩된 상태로 뒤로 왔는데 카드 UI가 늦게 동기화된 경우
+      // 첫 클릭이 '취소' 의도이므로 400 "이미 스크랩"이면 바로 DELETE 실행
+      if (!bookmarked && status === 400 && /이미\s*스크랩/i.test(msg)) {
+        try {
+          await baseApi.delete(`/articles/${post.id}/scraps`);
+          setBookmarked(false);
+          setBookmarkCount((prev) => Math.max(0, prev - 1));
+          return; // 한 번의 클릭으로 취소 끝
+        } catch {}
+      }
+
+      // 반대로 UI는 true인데 서버는 이미 취소됨
+      if (bookmarked && status === 400 && /스크랩하지\s*않은/i.test(msg)) {
+        setBookmarked(false);
+        setBookmarkCount((prev) => Math.max(0, prev - 1));
+        return;
+      }
+
+      alert(`스크랩 처리 중 오류가 발생했습니다. ${msg ? `(${msg})` : ""}`);
     }
   };
 
@@ -78,36 +150,26 @@ const PostCard = ({ post }) => {
     CULTURE: "문화",
   };
 
-  // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
     if (!dateString) return "날짜 없음";
-
     try {
       const date = new Date(dateString);
-
-      // 유효한 날짜인지 확인
-      if (isNaN(date.getTime())) {
-        return "날짜 없음";
-      }
-
+      if (isNaN(date.getTime())) return "날짜 없음";
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}년 ${month}월 ${day}일`;
-    } catch (error) {
-      console.error("날짜 포맷팅 오류:", error);
+    } catch {
       return "날짜 없음";
     }
   };
 
-  // 작성자 이름 가져오기 함수
   const getAuthorName = () => {
     return (
       post.author?.nickname || post.author?.name || post.authorName || "익명"
     );
   };
 
-  // 이미지 로드 에러 핸들링 - 깜빡임 방지
   const handleImageError = (e) => {
     e.target.style.opacity = "0";
     setTimeout(() => {
@@ -124,7 +186,6 @@ const PostCard = ({ post }) => {
     }, 100);
   };
 
-  // 제목 길이 제한
   const truncateTitle = (title, maxLength = 60) => {
     if (!title) return "제목 없음";
     return title.length > maxLength
@@ -132,19 +193,15 @@ const PostCard = ({ post }) => {
       : title;
   };
 
-  // 숫자 포맷팅
   const formatCount = (count) => {
-    if (count >= 1000000) {
-      return (count / 1000000).toFixed(1) + "M";
-    } else if (count >= 1000) {
-      return (count / 1000).toFixed(1) + "K";
-    }
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + "M";
+    if (count >= 1000) return (count / 1000).toFixed(1) + "K";
     return count.toString();
   };
 
   return (
     <div className="post-card" onClick={handleCardClick}>
-      {/* 상단 이미지 섹션만 */}
+      {/* 상단 이미지 섹션 */}
       <div className="post-header">
         <div className="post-images">
           <img
@@ -163,16 +220,13 @@ const PostCard = ({ post }) => {
               loading="lazy"
             />
           ) : (
-            <div className="sub-image-placeholder">
-              {/* 두 번째 이미지가 없을 때 회색 영역 */}
-            </div>
+            <div className="sub-image-placeholder" />
           )}
         </div>
       </div>
 
       {/* 콘텐츠 섹션 */}
       <div className="post-content">
-        {/* 프로필과 작성자/날짜 섹션 */}
         <div className="profile-date-section">
           <img
             src={post.author?.profileImage || "/default-profile.png"}
@@ -188,14 +242,11 @@ const PostCard = ({ post }) => {
           </p>
         </div>
 
-        {/* 제목 */}
         <h3 className="post-title" title={post.title || "제목 없음"}>
           {truncateTitle(post.title)}
         </h3>
 
-        {/* 태그와 액션 버튼을 같은 선상에 배치 */}
         <div className="post-bottom">
-          {/* 왼쪽 태그 섹션 */}
           <div className="post-tags">
             {post.tags &&
               post.tags.length > 0 &&
@@ -210,7 +261,6 @@ const PostCard = ({ post }) => {
               ))}
           </div>
 
-          {/* 오른쪽 액션 버튼 섹션 */}
           <div className="post-actions">
             <button
               className={`action-btn bookmark-btn ${
