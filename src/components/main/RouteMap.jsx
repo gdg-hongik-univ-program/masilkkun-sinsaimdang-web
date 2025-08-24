@@ -1,85 +1,64 @@
-// src/components/RouteMap.jsx
-import React, { useEffect, useRef } from "react";
+// src/hooks/useRoute.js
+import { useState, useCallback } from "react";
+import baseApi from "../api/baseApi";
 
-const RouteMap = ({ start, end, waypoints = [] }) => {
-  const mapRef = useRef(null);
+/**
+ * places: [{ lat, lng }, ...] 형식
+ * 반환: routeCoords: [{ lat, lng }, ...]
+ */
+export const useRoute = () => {
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!start || !end) return;
+  const getRoute = useCallback(async (places) => {
+    if (!places || places.length < 2) return;
 
-    // 스크립트 동적 로드
-    const script = document.createElement("script");
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
-      import.meta.env.VITE_MAP_API
-    }&libraries=services&autoload=false`;
-    document.head.appendChild(script);
+    setLoading(true);
+    setError(null);
 
-    script.onload = () => {
-      window.kakao.maps.load(() => {
-        const { kakao } = window;
-        const container = mapRef.current;
-        const map = new kakao.maps.Map(container, {
-          center: new kakao.maps.LatLng(start.lat, start.lng),
-          level: 5,
-        });
+    try {
+      const origin = `${places[0].lng},${places[0].lat}`;
+      const destination = `${places[places.length - 1].lng},${
+        places[places.length - 1].lat
+      }`;
+      const waypoints =
+        places.length > 2
+          ? places
+              .slice(1, -1)
+              .map((p) => `${p.lng},${p.lat}`)
+              .join("|")
+          : "";
 
-        // 마커 함수
-        const addMarker = (position, title) =>
-          new kakao.maps.Marker({ map, position, title });
+      const res = await baseApi.get(
+        `/directions?origin=${origin}&destination=${destination}&waypoints=${waypoints}`
+      );
 
-        addMarker(new kakao.maps.LatLng(start.lat, start.lng), "출발");
-        addMarker(new kakao.maps.LatLng(end.lat, end.lng), "도착");
-        waypoints.forEach((p, i) =>
-          addMarker(new kakao.maps.LatLng(p.lat, p.lng), `경유 ${i + 1}`)
-        );
+      // 백엔드에서 반환된 data가 문자열일 경우 parse
+      const data =
+        typeof res.data.data === "string"
+          ? JSON.parse(res.data.data)
+          : res.data.data;
 
-        // 경로 API 호출
-        const wayStr = waypoints.map((p) => `${p.lng},${p.lat}`).join("|");
-        const url = `https://apis-navi.kakaomobility.com/v1/directions?origin=${start.lng},${start.lat}&destination=${end.lng},${end.lat}&waypoints=${wayStr}&priority=RECOMMEND&alternatives=false`;
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
-        xhr.setRequestHeader(
-          "Authorization",
-          `KakaoAK ${import.meta.env.VITE_MAP_API}`
-        );
-
-        xhr.onreadystatechange = () => {
-          if (xhr.readyState === 4 && xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
-            if (!data.routes?.length) return;
-
-            const path = data.routes[0].sections[0].polyline;
-            const linePath = path.map(
-              ([lng, lat]) => new kakao.maps.LatLng(lat, lng)
-            );
-
-            // Polyline 그리기
-            new kakao.maps.Polyline({
-              map,
-              path: linePath,
-              strokeWeight: 5,
-              strokeColor: "#FF0000",
-              strokeOpacity: 0.7,
-              strokeStyle: "solid",
-            });
-
-            // 지도 bounds 조정
-            const bounds = new kakao.maps.LatLngBounds();
-            linePath.forEach((latlng) => bounds.extend(latlng));
-            map.setBounds(bounds);
-          }
-        };
-        xhr.send();
+      // roads[].vertexes → [{lat, lng}, ...]
+      const roads = data.routes[0].sections[0].roads || [];
+      const coords = [];
+      roads.forEach((road) => {
+        const v = road.vertexes;
+        for (let i = 0; i < v.length; i += 2) {
+          coords.push({ lat: v[i + 1], lng: v[i] });
+        }
       });
-    };
 
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, [start, end, waypoints]);
+      setRouteCoords(coords);
+      return coords;
+    } catch (err) {
+      console.error("길찾기 API 실패:", err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  return <div ref={mapRef} style={{ width: "100%", height: "500px" }} />;
+  return { routeCoords, getRoute, loading, error };
 };
-
-export default RouteMap;
