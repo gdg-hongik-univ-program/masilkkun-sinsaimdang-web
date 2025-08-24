@@ -1,128 +1,140 @@
+// src/pages/PostCoursePage.jsx
 import React, { useEffect, useState } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { FaHeart, FaBookmark, FaArrowLeft } from "react-icons/fa";
-import axios from "axios";
 import "./PostCoursePage.css";
 import baseApi from "../api/baseApi";
+
+const ACTIONS_KEY = "articleActions"; // { [articleId]: { isLiked, isScraped, likeCount, scrapCount } }
+
+const readActions = () => {
+  try {
+    return JSON.parse(sessionStorage.getItem(ACTIONS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const writeActions = (obj) => {
+  try {
+    sessionStorage.setItem(ACTIONS_KEY, JSON.stringify(obj));
+  } catch {}
+};
+
+const patchArticleCache = (articleId, patch) => {
+  const map = readActions();
+  map[String(articleId)] = { ...(map[String(articleId)] || {}), ...patch };
+  writeActions(map);
+};
 
 const PostCoursePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // 표시 상태 + 카운트
   const [isLiked, setIsLiked] = useState(false);
   const [isScraped, setIsScraped] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [scrapCount, setScrapCount] = useState(0);
 
-  // ============================
-  // ✅ 추가: 리스트와 동기화를 위한 sessionStorage 키/유틸
-  // ============================
-  const SCRAP_MAP_KEY = "scrapMap"; // { [postId]: true/false }
-  const SCRAP_COUNT_MAP_KEY = "scrapCountMap"; // { [postId]: number }
+  const handleGoBack = () => navigate(-1);
 
-  const readMap = (key) => {
-    try {
-      return JSON.parse(sessionStorage.getItem(key) || "{}");
-    } catch {
-      return {};
-    }
-  };
-  const writeMap = (key, obj) => {
-    try {
-      sessionStorage.setItem(key, JSON.stringify(obj));
-    } catch {}
-  };
-
-  const handleGoBack = () => {
-    console.log("뒤로가기 버튼 클릭");
-    navigate(-1);
-  };
-
-  // 좋아요 처리
-  const handleLikeToggle = async () => {
+  const ensureToken = () => {
     const token =
       sessionStorage.getItem("accessToken") ||
       localStorage.getItem("accessToken");
     if (!token) {
       alert("로그인이 필요합니다.");
-      return;
+      return null;
     }
+    return token;
+  };
+
+  // 좋아요 토글: "숫자 변화 ↔ 색" 동기화
+  const handleLikeToggle = async () => {
+    const token = ensureToken();
+    if (!token) return;
 
     try {
       if (isLiked) {
-        console.log("좋아요 취소 시도:", id);
         await baseApi.delete(`articles/${id}/likes`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setIsLiked(false);
-        setLikeCount((prev) => prev - 1);
-        console.log("✅ 좋아요 취소 완료");
+        setLikeCount((prev) => {
+          const next = Math.max(0, prev - 1);
+          setIsLiked(next > 0); // ★ 카운트에 맞춰 색 상태 동기화
+          patchArticleCache(id, { isLiked: next > 0, likeCount: next });
+          return next;
+        });
       } else {
-        console.log("좋아요 추가 시도:", id);
         await baseApi.post(
           `articles/${id}/likes`,
           {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        setIsLiked(true);
-        setLikeCount((prev) => prev + 1);
-        console.log("✅ 좋아요 추가 완료");
+        setLikeCount((prev) => {
+          const next = prev + 1;
+          setIsLiked(next > 0); // ★ 카운트에 맞춰 색 상태 동기화
+          patchArticleCache(id, { isLiked: next > 0, likeCount: next });
+          return next;
+        });
       }
     } catch (err) {
-      console.error("❌ 좋아요 처리 오류:", err);
-      console.error("응답 데이터:", err.response?.data);
-      if (err.response?.status === 401) {
-        alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
-      } else {
-        alert("좋아요 처리 중 오류가 발생했습니다.");
+      const msg = err.response?.data?.message || "";
+      const status = err.response?.status;
+
+      // 서버-UI 엇갈림 보정
+      if (!isLiked && status === 400 && /이미\s*좋아요/i.test(msg)) {
+        try {
+          await baseApi.delete(`articles/${id}/likes`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setLikeCount((prev) => {
+            const next = Math.max(0, prev - 1);
+            setIsLiked(next > 0);
+            patchArticleCache(id, { isLiked: next > 0, likeCount: next });
+            return next;
+          });
+          return;
+        } catch {}
       }
+      if (isLiked && status === 400 && /좋아요를\s*누르지\s*않은/i.test(msg)) {
+        setLikeCount((prev) => {
+          const next = Math.max(0, prev - 1);
+          setIsLiked(next > 0);
+          patchArticleCache(id, { isLiked: next > 0, likeCount: next });
+          return next;
+        });
+        return;
+      }
+
+      alert(`좋아요 처리 중 오류가 발생했습니다. ${msg ? `(${msg})` : ""}`);
     }
   };
 
-  // 스크랩 처리 - 수정된 API 방식
+  // 스크랩 토글: "숫자 변화 ↔ 색" 동기화
   const handleScrapToggle = async () => {
-    const token =
-      sessionStorage.getItem("accessToken") ||
-      localStorage.getItem("accessToken");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      return;
-    }
+    const token = ensureToken();
+    if (!token) return;
 
     try {
       if (isScraped) {
-        console.log("스크랩 취소 시도:", id);
-        // DELETE 방식으로 스크랩 취소
         await baseApi.delete(`articles/${id}/scraps`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        // ============================
-        // ✅ 추가: 상태/카운트 & sessionStorage 동기화
-        // ============================
-        setIsScraped(false);
-        setScrapCount((prev) => Math.max(0, prev - 1));
-
-        const m = readMap(SCRAP_MAP_KEY);
-        m[id] = false;
-        writeMap(SCRAP_MAP_KEY, m);
-
-        const c = readMap(SCRAP_COUNT_MAP_KEY);
-        c[id] = Math.max(0, (c[id] ?? scrapCount) - 1);
-        writeMap(SCRAP_COUNT_MAP_KEY, c);
-
-        console.log("✅ 스크랩 취소 완료");
-        alert("스크랩이 취소되었습니다.");
+        setScrapCount((prev) => {
+          const next = Math.max(0, prev - 1);
+          setIsScraped(next > 0); // ★ 카운트에 맞춰 색 상태 동기화
+          patchArticleCache(id, { isScraped: next > 0, scrapCount: next });
+          return next;
+        });
       } else {
-        console.log("스크랩 추가 시도:", id);
-
-        // POST 방식으로 스크랩 추가 - 여러 방법 시도
+        // 서버별 payload 요구 대응
         try {
-          // 방법 1: 빈 객체
           await baseApi.post(
             `articles/${id}/scraps`,
             {},
@@ -133,155 +145,104 @@ const PostCoursePage = () => {
               },
             }
           );
-        } catch (firstError) {
-          console.log("방법 1 실패, 방법 2 시도");
-          try {
-            // 방법 2: null
-            await baseApi.post(`articles/${id}/scraps`, null, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-          } catch (secondError) {
-            console.log("방법 2 실패, 방법 3 시도");
-            // 방법 3: 데이터 없이
-            await baseApi.post(`articles/${id}/scraps`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-          }
+        } catch {
+          await baseApi.post(`articles/${id}/scraps`, null, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
         }
-
-        // ============================
-        // ✅ 추가: 상태/카운트 & sessionStorage 동기화
-        // ============================
-        setIsScraped(true);
-        setScrapCount((prev) => prev + 1);
-
-        const m = readMap(SCRAP_MAP_KEY);
-        m[id] = true;
-        writeMap(SCRAP_MAP_KEY, m);
-
-        const c = readMap(SCRAP_COUNT_MAP_KEY);
-        c[id] = (c[id] ?? scrapCount) + 1;
-        writeMap(SCRAP_COUNT_MAP_KEY, c);
-
-        console.log("✅ 스크랩 추가 완료");
-        alert("스크랩에 추가되었습니다.");
+        setScrapCount((prev) => {
+          const next = prev + 1;
+          setIsScraped(next > 0); // ★ 카운트에 맞춰 색 상태 동기화
+          patchArticleCache(id, { isScraped: next > 0, scrapCount: next });
+          return next;
+        });
       }
     } catch (err) {
-      console.error("❌ 스크랩 처리 오류:", err);
-      console.error("에러 상태:", err.response?.status);
-      console.error("에러 데이터:", err.response?.data);
-      console.error("에러 메시지:", err.response?.data?.message);
-
       const status = err.response?.status;
       const message = err.response?.data?.message || "";
 
       if (status === 401) {
         alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
-      } else if (status === 400) {
-        // ==========================================
-        // ✅ 핵심: 리스트 UI가 뒤쳐졌을 때 한 번에 '취소'
-        // (UI는 false였지만 서버는 이미 스크랩 상태 → 바로 DELETE 호출)
-        // ==========================================
-        if (!isScraped && /이미/.test(message)) {
+        return;
+      }
+      if (status === 400) {
+        // 상태 불일치 보정
+        if (!isScraped && /이미\s*스크랩/i.test(message)) {
           try {
             await baseApi.delete(`articles/${id}/scraps`, {
               headers: { Authorization: `Bearer ${token}` },
             });
-
-            setIsScraped(false);
-            setScrapCount((prev) => Math.max(0, prev - 1));
-
-            const m = readMap(SCRAP_MAP_KEY);
-            m[id] = false;
-            writeMap(SCRAP_MAP_KEY, m);
-
-            const c = readMap(SCRAP_COUNT_MAP_KEY);
-            c[id] = Math.max(0, (c[id] ?? scrapCount) - 1);
-            writeMap(SCRAP_COUNT_MAP_KEY, c);
-
-            console.log("✅ (자동) 이미 스크랩 → 즉시 취소 처리 완료");
-            return; // 한 번의 클릭으로 종료
-          } catch (e2) {
-            console.error("자동 취소도 실패:", e2);
-          }
+            setScrapCount((prev) => {
+              const next = Math.max(0, prev - 1);
+              setIsScraped(next > 0);
+              patchArticleCache(id, { isScraped: next > 0, scrapCount: next });
+              return next;
+            });
+            return;
+          } catch {}
         }
-
-        if (isScraped && /스크랩하지\s*않은/.test(message)) {
-          // 반대 케이스: UI는 true인데 서버는 이미 취소됨 → UI만 맞춤
-          setIsScraped(false);
-          setScrapCount((prev) => Math.max(0, prev - 1));
-
-          const m = readMap(SCRAP_MAP_KEY);
-          m[id] = false;
-          writeMap(SCRAP_MAP_KEY, m);
+        if (isScraped && /스크랩하지\s*않은/i.test(message)) {
+          setScrapCount((prev) => {
+            const next = Math.max(0, prev - 1);
+            setIsScraped(next > 0);
+            patchArticleCache(id, { isScraped: next > 0, scrapCount: next });
+            return next;
+          });
           return;
         }
-
         alert("잘못된 요청입니다. 다시 시도해주세요.");
-      } else if (status === 409) {
+        return;
+      }
+      if (status === 409) {
         alert("이미 스크랩된 게시글입니다.");
         setIsScraped(true);
-      } else {
-        alert("스크랩 처리 중 오류가 발생했습니다.");
+        patchArticleCache(id, { isScraped: true });
+        return;
       }
+
+      alert("스크랩 처리 중 오류가 발생했습니다.");
     }
   };
 
+  // 상세 조회
   useEffect(() => {
-    console.log("=== PostCoursePage useEffect 시작 ===");
-    console.log("게시글 ID:", id);
-
     const fetchPost = async () => {
       try {
         setLoading(true);
-        console.log("API 호출 시작: articles/" + id);
 
         const token =
           sessionStorage.getItem("accessToken") ||
           localStorage.getItem("accessToken");
-        console.log("토큰 확인:", token ? "토큰 있음" : "토큰 없음");
-
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const response = await baseApi.get(`articles/${id}`, { headers });
-
-        console.log("✅ API 응답 성공:", response.data);
-        console.log("게시글 데이터:", response.data.data);
-
-        const postData = response.data.data;
+        const res = await baseApi.get(`articles/${id}`, { headers });
+        const postData = res.data?.data;
         setPost(postData);
 
-        // 좋아요/스크랩 상태 초기화
-        setIsLiked(postData.isLiked || false);
-        setIsScraped(postData.isScraped || false);
-        setLikeCount(postData.likeCount || 0);
-        setScrapCount(postData.scrapCount || 0);
+        // 서버 값으로 초기 상태 세팅
+        const like0 = Number(postData?.likeCount || 0);
+        const scrap0 = Number(postData?.scrapCount || 0);
+        const liked0 = !!postData?.isLiked;
+        const scraped0 = !!postData?.isScraped;
 
-        // ==========================================
-        // ✅ 추가(권장): 상세 초기 로딩 시 sessionStorage에도 반영
-        // → 뒤로가기 했을 때 리스트가 바로 반영됨
-        // ==========================================
-        const m = readMap(SCRAP_MAP_KEY);
-        m[id] = !!postData.isScraped;
-        writeMap(SCRAP_MAP_KEY, m);
+        setLikeCount(like0);
+        setScrapCount(scrap0);
 
-        const c = readMap(SCRAP_COUNT_MAP_KEY);
-        c[id] = Number(postData.scrapCount || 0);
-        writeMap(SCRAP_COUNT_MAP_KEY, c);
-
-        console.log("초기 상태 설정:");
-        console.log("- 좋아요:", postData.isLiked, "개수:", postData.likeCount);
-        console.log(
-          "- 스크랩:",
-          postData.isScraped,
-          "개수:",
-          postData.scrapCount
+        // 숫자와 색을 함께 맞춤: 서버 불리언 우선, 없으면 카운트 기준
+        setIsLiked(typeof postData?.isLiked === "boolean" ? liked0 : like0 > 0);
+        setIsScraped(
+          typeof postData?.isScraped === "boolean" ? scraped0 : scrap0 > 0
         );
-      } catch (err) {
-        console.error("❌ 게시글 조회 실패:", err);
-        console.error("에러 상태:", err.response?.status);
-        console.error("에러 데이터:", err.response?.data);
 
+        // ✅ 상세 진입 시 캐시 시드 (목록에서도 색 유지)
+        patchArticleCache(id, {
+          isLiked: typeof postData?.isLiked === "boolean" ? liked0 : like0 > 0,
+          isScraped:
+            typeof postData?.isScraped === "boolean" ? scraped0 : scrap0 > 0,
+          likeCount: like0,
+          scrapCount: scrap0,
+        });
+      } catch (err) {
         if (err.response?.status === 401) {
           setError("로그인이 필요하거나 권한이 없습니다.");
         } else if (err.response?.status === 404) {
@@ -291,28 +252,20 @@ const PostCoursePage = () => {
         }
       } finally {
         setLoading(false);
-        console.log("API 호출 완료");
       }
     };
 
     fetchPost();
   }, [id]);
 
-  // 렌더링 로그
-  console.log("=== PostCoursePage 렌더링 ===");
-  console.log("현재 상태 - loading:", loading, "error:", error, "post:", post);
-  console.log("좋아요 상태:", isLiked, "개수:", likeCount);
-  console.log("스크랩 상태:", isScraped, "개수:", scrapCount);
-
   if (loading) {
-    console.log("로딩 중 화면 표시");
     return (
       <div className="post-course-page">
         <button className="back-button" onClick={handleGoBack}>
           <FaArrowLeft />
           <span>뒤로가기</span>
         </button>
-        <div style={{ textAlign: "center", marginTop: "100px" }}>
+        <div style={{ textAlign: "center", marginTop: 100 }}>
           <h2>로딩 중...</h2>
         </div>
       </div>
@@ -320,24 +273,23 @@ const PostCoursePage = () => {
   }
 
   if (error) {
-    console.log("에러 화면 표시:", error);
     return (
       <div className="post-course-page">
         <button className="back-button" onClick={handleGoBack}>
           <FaArrowLeft />
           <span>뒤로가기</span>
         </button>
-        <div style={{ textAlign: "center", marginTop: "100px" }}>
+        <div style={{ textAlign: "center", marginTop: 100 }}>
           <h2>{error}</h2>
           <button
             onClick={handleGoBack}
             style={{
-              marginTop: "20px",
+              marginTop: 20,
               padding: "10px 20px",
               backgroundColor: "#8B7355",
               color: "white",
               border: "none",
-              borderRadius: "8px",
+              borderRadius: 8,
               cursor: "pointer",
             }}
           >
@@ -349,30 +301,23 @@ const PostCoursePage = () => {
   }
 
   if (!post) {
-    console.log("게시글 없음 화면 표시");
     return (
       <div className="post-course-page">
         <button className="back-button" onClick={handleGoBack}>
           <FaArrowLeft />
           <span>뒤로가기</span>
         </button>
-        <div style={{ textAlign: "center", marginTop: "100px" }}>
+        <div style={{ textAlign: "center", marginTop: 100 }}>
           <h2>게시글을 찾을 수 없습니다.</h2>
         </div>
       </div>
     );
   }
 
-  console.log("=== 게시글 렌더링 데이터 ===");
-  console.log("제목:", post.title);
-  console.log("지역:", post.region);
-  console.log("장소들:", post.places);
-  console.log("태그들:", post.tags);
-
   return (
     <div className="post-course-page">
       <button className="back-button" onClick={handleGoBack}>
-        <FaArrowLeft />{" "}
+        <FaArrowLeft />
       </button>
 
       <div className="course-header">
