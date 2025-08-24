@@ -321,15 +321,15 @@ const PostCreatePage = ({ mapRef }) => {
                 </button>
               )}
             </div>
-
-            <input
-              type="text"
+            <div
+              maxLength={50}
               placeholder="장소 이름"
               className="place-name-input"
               value={place.placeName}
               onChange={(e) => handlePlaceNameChange(index, e.target.value)}
-              maxLength={50}
-            />
+            >
+              장소: {place.placeName}
+            </div>
 
             <button
               className="location-select-btn"
@@ -338,11 +338,9 @@ const PostCreatePage = ({ mapRef }) => {
             >
               위치 등록
             </button>
-
             {place.address && (
               <div className="selected-address">주소: {place.address}</div>
             )}
-
             <div className="image-upload-section">
               <label
                 htmlFor={`imageUpload-${index}`}
@@ -371,7 +369,6 @@ const PostCreatePage = ({ mapRef }) => {
                 style={{ display: "none" }}
               />
             </div>
-
             <textarea
               className="place-description-input"
               placeholder="설명을 작성해주세요."

@@ -12,6 +12,8 @@ const PostCard = ({ post }) => {
 
   const navigate = useNavigate();
 
+  console.log("🔥 post.photos:", post.photos);
+
   // 🔸 리스트가 상세에서의 변경을 알고 시작하도록 초기 동기화
   useEffect(() => {
     setLiked(!!post.isLiked);
@@ -200,15 +202,15 @@ const PostCard = ({ post }) => {
       <div className="post-header">
         <div className="post-images">
           <img
-            src={post.photos?.[0] || "/default-image.png"}
+            src={post.places?.[0]?.photoUrl || "/default-image.png"}
             alt={post.title || "게시글 이미지"}
             onError={handleImageError}
             className="main-image"
             loading="lazy"
           />
-          {post.photos?.[1] ? (
+          {post.places?.[1]?.photoUrl ? (
             <img
-              src={post.photos[1]}
+              src={post.places[1].photoUrl}
               alt={`${post.title || "게시글"} 서브 이미지`}
               className="sub-image"
               onError={handleImageError}
