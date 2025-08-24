@@ -1,12 +1,13 @@
 // src/pages/PostCoursePage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaHeart, FaBookmark, FaArrowLeft } from "react-icons/fa";
 import "./PostCoursePage.css";
+import Mapview from "../components/main/Mapview";
+import RouteMap from "../components/main/RouteMap";
 import baseApi from "../api/baseApi";
 
-const ACTIONS_KEY = "articleActions"; // { [articleId]: { isLiked, isScraped, likeCount, scrapCount } }
-
+const ACTIONS_KEY = "articleActions";
 const readActions = () => {
   try {
     return JSON.parse(sessionStorage.getItem(ACTIONS_KEY) || "{}");
@@ -28,6 +29,7 @@ const patchArticleCache = (articleId, patch) => {
 };
 
 const PostCoursePage = () => {
+  const mapRef = useRef(null);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -204,7 +206,43 @@ const PostCoursePage = () => {
     }
   };
 
-  // 상세 조회
+  const TAG_LABELS = {
+    CAFE: "카페",
+    RESTAURANT: "맛집",
+    TRAVEL_SPOT: "여행지",
+  };
+
+  const getCoordsFromAddress = (address) => {
+    return new Promise((resolve, reject) => {
+      const geocoder = new window.kakao.maps.services.Geocoder();
+      geocoder.addressSearch(address, (result, status) => {
+        if (status === window.kakao.maps.services.Status.OK) {
+          const { y: lat, x: lng } = result[0];
+          console.log("좌표 변환 성공:", address, lat, lng);
+          resolve({ lat: parseFloat(lat), lng: parseFloat(lng) });
+        } else {
+          console.error("좌표 변환 실패:", address);
+          reject(new Error("주소 변환 실패"));
+        }
+      });
+    });
+  };
+
+  const fetchPlacesCoords = async (places) => {
+    return await Promise.all(
+      places.map(async (p) => {
+        if (!p.address) return p; // 주소 없으면 건너뛰기
+        try {
+          const coords = await getCoordsFromAddress(p.address);
+          return { ...p, ...coords }; // lat/lng 추가
+        } catch (err) {
+          console.error("좌표 변환 실패:", p.address, err);
+          return p;
+        }
+      })
+    );
+  };
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -258,62 +296,36 @@ const PostCoursePage = () => {
     fetchPost();
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="post-course-page">
-        <button className="back-button" onClick={handleGoBack}>
-          <FaArrowLeft />
-          <span>뒤로가기</span>
-        </button>
-        <div style={{ textAlign: "center", marginTop: 100 }}>
-          <h2>로딩 중...</h2>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const preparePlacesCoords = async () => {
+      if (!post?.places?.length || !mapRef.current?.getRoute) return;
 
-  if (error) {
-    return (
-      <div className="post-course-page">
-        <button className="back-button" onClick={handleGoBack}>
-          <FaArrowLeft />
-          <span>뒤로가기</span>
-        </button>
-        <div style={{ textAlign: "center", marginTop: 100 }}>
-          <h2>{error}</h2>
-          <button
-            onClick={handleGoBack}
-            style={{
-              marginTop: 20,
-              padding: "10px 20px",
-              backgroundColor: "#8B7355",
-              color: "white",
-              border: "none",
-              borderRadius: 8,
-              cursor: "pointer",
-            }}
-          >
-            뒤로가기
-          </button>
-        </div>
-      </div>
-    );
-  }
+      console.log("주소 목록:", post.places);
 
-  if (!post) {
-    return (
-      <div className="post-course-page">
-        <button className="back-button" onClick={handleGoBack}>
-          <FaArrowLeft />
-          <span>뒤로가기</span>
-        </button>
-        <div style={{ textAlign: "center", marginTop: 100 }}>
-          <h2>게시글을 찾을 수 없습니다.</h2>
-        </div>
-      </div>
-    );
-  }
+      const placesWithCoords = await Promise.all(
+        post.places.map(async (p) => {
+          if (!p.address) return p;
+          try {
+            const coords = await getCoordsFromAddress(p.address);
+            return { ...p, ...coords }; // lat/lng 추가
+          } catch (err) {
+            console.error("좌표 변환 오류:", p.address, err);
+            return p;
+          }
+        })
+      );
 
+      console.log("좌표 변환 완료:", placesWithCoords);
+
+      mapRef.current.getRoute(placesWithCoords); // Mapview에 전달
+    };
+
+    preparePlacesCoords();
+  }, [post]);
+
+  if (loading) return <div>로딩 중...</div>;
+  if (error) return <div>{error}</div>;
+  if (!post) return <div>게시글을 찾을 수 없습니다.</div>;
   return (
     <div className="post-course-page">
       <button className="back-button" onClick={handleGoBack}>
@@ -344,11 +356,15 @@ const PostCoursePage = () => {
       </div>
 
       <div className="tags">
-        {post.tags?.map((tag, i) => (
-          <button key={i} className="tag-btn">
-            #{tag}
-          </button>
-        ))}
+        {post.tags?.map((tag, i) => {
+          const value = tag.replace(/^#/, ""); // '#' 있으면 제거
+          const label = TAG_LABELS[value] || value; // 매핑 없으면 원래 값
+          return (
+            <button key={i} className="tag-btn">
+              #{label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="course-summary">
@@ -385,6 +401,14 @@ const PostCoursePage = () => {
           </div>
         ))}
       </div>
+      <RouteMap
+        start={{ lat: 37.5665, lng: 126.978 }}
+        end={{ lat: 37.57, lng: 126.992 }}
+        waypoints={[
+          { lat: 37.567, lng: 126.981 },
+          { lat: 37.568, lng: 126.985 },
+        ]}
+      />
     </div>
   );
 };

@@ -8,12 +8,12 @@ import React, {
 import { useLocation } from "react-router-dom";
 import "./Mapview.css";
 
-const Mapview = forwardRef(({ onSelectPlace }, ref) => {
+const Mapview = forwardRef(({ post, showMap = true }, ref) => {
+  if ((showMap = false)) return null;
   const location = useLocation();
   const isMyPage = location.pathname === "/mypage";
-  const isPostPage = location.pathname.includes("/create");
-
-  const [showSearch, setShowSearch] = useState(false);
+  const isCreatePage = location.pathname.includes("/create");
+  const isPostPage = location.pathname.startsWith("/post");
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const psRef = useRef(null);
@@ -21,14 +21,95 @@ const Mapview = forwardRef(({ onSelectPlace }, ref) => {
   const keywordRef = useRef(null);
   const listRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const polylineRef = useRef(null);
   const [onSelectPlaceCallback, setOnSelectPlaceCallback] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   // 부모 컴포넌트에서 호출 가능
   useImperativeHandle(ref, () => ({
     openSearch: () => setShowSearch(true),
     closeSearch: () => setShowSearch(false),
     setOnSelectPlace: (callback) => setOnSelectPlaceCallback(() => callback),
+    getRoute: async (places) => {
+      console.log("경로 계산 데이터:", post.places);
+      if (!places || places.length < 2) return;
+
+      // 출발지, 도착지, 경유지
+
+      const origin = `${places[0].lng},${places[0].lat}`;
+      const destination = `${places[places.length - 1].lng},${
+        places[places.length - 1].lat
+      }`;
+      const waypoints =
+        places.length > 2
+          ? places
+              .slice(1, -1)
+              .map((p) => `${p.lng},${p.lat}`)
+              .join("|")
+          : "";
+
+      try {
+        const res = await fetch(
+          `https://apis-navi.kakaomobility.com/v1/directions?origin=${origin}&destination=${destination}&waypoints=${waypoints}&summary=false&priority=RECOMMEND`,
+          {
+            headers: {
+              Authorization: `KakaoAK ${import.meta.env.VITE_REST_KEY}`,
+            },
+          }
+        );
+        const data = await res.json();
+        console.log("길찾기 API 응답:", data);
+        if (!data.routes?.length) {
+          console.warn("경로가 없습니다.");
+          return;
+        }
+        // Polyline 좌표 변환
+        const coords = data.routes[0].sections[0].polyline.map(
+          ([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)
+        );
+        console.log("Polyline 좌표:", coords);
+        // 기존 Polyline 제거
+        if (showMap && mapInstanceRef.current) {
+          if (polylineRef.current) polylineRef.current.setMap(null);
+          const polyline = new window.kakao.maps.Polyline({
+            path: coords.map((c) => new window.kakao.maps.LatLng(c.lat, c.lng)),
+            strokeWeight: 5,
+            strokeColor: "#FF6347",
+            strokeOpacity: 0.8,
+            strokeStyle: "solid",
+          });
+          polyline.setMap(mapInstanceRef.current);
+          polylineRef.current = polyline;
+        }
+      } catch (err) {
+        console.error("길찾기 API 호출 실패:", err);
+      }
+    },
   }));
+  // const getCoordsFromAddress = (address) =>
+  //   new Promise((resolve, reject) => {
+  //     const geocoder = new window.kakao.maps.services.Geocoder();
+  //     geocoder.addressSearch(address, (result, status) => {
+  //       if (status === window.kakao.maps.services.Status.OK) {
+  //         const { y: lat, x: lng } = result[0];
+  //         resolve({ lat: parseFloat(lat), lng: parseFloat(lng) });
+  //       } else reject(new Error("주소 변환 실패"));
+  //     });
+  //   });
+
+  // const fetchPlacesCoords = async (places) => {
+  //   return await Promise.all(
+  //     places.map(async (p) => {
+  //       if (!p.address) return p;
+  //       try {
+  //         const coords = await getCoordsFromAddress(p.address);
+  //         return { ...p, ...coords };
+  //       } catch {
+  //         return p;
+  //       }
+  //     })
+  //   );
+  // };
 
   const handlePlaceClick = (place) => {
     if (onSelectPlaceCallback) onSelectPlaceCallback(place);
@@ -138,6 +219,21 @@ const Mapview = forwardRef(({ onSelectPlace }, ref) => {
       }
     });
   };
+
+  useEffect(() => {
+    if (!mapRef.current || !post?.places?.length) return;
+
+    const setupRoute = async () => {
+      const placesWithCoords = await fetchPlacesCoords(post.places);
+      // 좌표가 있는 경우만 필터
+      const validPlaces = placesWithCoords.filter((p) => p.lat && p.lng);
+      if (validPlaces.length >= 2) {
+        mapRef.current.getRoute(validPlaces);
+      }
+    };
+
+    setupRoute();
+  }, [post?.places]);
 
   // 지도 초기화 + 폴리곤 복원
   useEffect(() => {
