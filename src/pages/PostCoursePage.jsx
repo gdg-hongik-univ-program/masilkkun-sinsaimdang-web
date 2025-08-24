@@ -1,13 +1,21 @@
 // src/pages/PostCoursePage.jsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaHeart, FaBookmark, FaArrowLeft } from "react-icons/fa";
 import "./PostCoursePage.css";
-import Mapview from "../components/main/Mapview";
-import RouteMap from "../components/main/RouteMap";
 import baseApi from "../api/baseApi";
+import Mapview from "../components/main/Mapview";
 
-const ACTIONS_KEY = "articleActions";
+const TAG_LABELS = {
+  CAFE: "카페",
+  RESTAURANT: "맛집",
+  TRAVEL_SPOT: "여행지",
+};
+const patchArticleCache = (articleId, patch) => {
+  const map = readActions();
+  map[String(articleId)] = { ...(map[String(articleId)] || {}), ...patch };
+  writeActions(map);
+};
 const readActions = () => {
   try {
     return JSON.parse(sessionStorage.getItem(ACTIONS_KEY) || "{}");
@@ -21,23 +29,12 @@ const writeActions = (obj) => {
     sessionStorage.setItem(ACTIONS_KEY, JSON.stringify(obj));
   } catch {}
 };
-
-const patchArticleCache = (articleId, patch) => {
-  const map = readActions();
-  map[String(articleId)] = { ...(map[String(articleId)] || {}), ...patch };
-  writeActions(map);
-};
-
-const PostCoursePage = () => {
-  const mapRef = useRef(null);
+const PostCoursePage = ({ mapRef }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // 표시 상태 + 카운트
   const [isLiked, setIsLiked] = useState(false);
   const [isScraped, setIsScraped] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -206,48 +203,21 @@ const PostCoursePage = () => {
     }
   };
 
-  const TAG_LABELS = {
-    CAFE: "카페",
-    RESTAURANT: "맛집",
-    TRAVEL_SPOT: "여행지",
-  };
-
-  const getCoordsFromAddress = (address) => {
-    return new Promise((resolve, reject) => {
+  const getCoordsFromAddress = (address) =>
+    new Promise((resolve, reject) => {
       const geocoder = new window.kakao.maps.services.Geocoder();
       geocoder.addressSearch(address, (result, status) => {
         if (status === window.kakao.maps.services.Status.OK) {
           const { y: lat, x: lng } = result[0];
-          console.log("좌표 변환 성공:", address, lat, lng);
           resolve({ lat: parseFloat(lat), lng: parseFloat(lng) });
-        } else {
-          console.error("좌표 변환 실패:", address);
-          reject(new Error("주소 변환 실패"));
-        }
+        } else reject(new Error("주소 변환 실패"));
       });
     });
-  };
-
-  const fetchPlacesCoords = async (places) => {
-    return await Promise.all(
-      places.map(async (p) => {
-        if (!p.address) return p; // 주소 없으면 건너뛰기
-        try {
-          const coords = await getCoordsFromAddress(p.address);
-          return { ...p, ...coords }; // lat/lng 추가
-        } catch (err) {
-          console.error("좌표 변환 실패:", p.address, err);
-          return p;
-        }
-      })
-    );
-  };
 
   useEffect(() => {
-    const fetchPost = async () => {
+    const fetchPostAndRoute = async () => {
       try {
         setLoading(true);
-
         const token =
           sessionStorage.getItem("accessToken") ||
           localStorage.getItem("accessToken");
@@ -255,9 +225,7 @@ const PostCoursePage = () => {
 
         const res = await baseApi.get(`articles/${id}`, { headers });
         const postData = res.data?.data;
-        setPost(postData);
 
-        // 서버 값으로 초기 상태 세팅
         const like0 = Number(postData?.likeCount || 0);
         const scrap0 = Number(postData?.scrapCount || 0);
         const liked0 = !!postData?.isLiked;
@@ -265,14 +233,12 @@ const PostCoursePage = () => {
 
         setLikeCount(like0);
         setScrapCount(scrap0);
-
-        // 숫자와 색을 함께 맞춤: 서버 불리언 우선, 없으면 카운트 기준
         setIsLiked(typeof postData?.isLiked === "boolean" ? liked0 : like0 > 0);
         setIsScraped(
           typeof postData?.isScraped === "boolean" ? scraped0 : scrap0 > 0
         );
 
-        // ✅ 상세 진입 시 캐시 시드 (목록에서도 색 유지)
+        // 캐시 저장
         patchArticleCache(id, {
           isLiked: typeof postData?.isLiked === "boolean" ? liked0 : like0 > 0,
           isScraped:
@@ -280,52 +246,54 @@ const PostCoursePage = () => {
           likeCount: like0,
           scrapCount: scrap0,
         });
-      } catch (err) {
-        if (err.response?.status === 401) {
-          setError("로그인이 필요하거나 권한이 없습니다.");
-        } else if (err.response?.status === 404) {
-          setError("게시글을 찾을 수 없습니다.");
-        } else {
-          setError("게시글을 불러오는 데 실패했습니다.");
+
+        let placesWithCoords = postData.places;
+        if (postData?.places?.length) {
+          placesWithCoords = await Promise.all(
+            postData.places.map(async (p) => {
+              if (!p.address) return p;
+              const geocoder = new window.kakao.maps.services.Geocoder();
+              return new Promise((resolve, reject) => {
+                geocoder.addressSearch(p.address, (result, status) => {
+                  if (status === window.kakao.maps.services.Status.OK) {
+                    const { y: lat, x: lng } = result[0];
+                    resolve({
+                      ...p,
+                      lat: parseFloat(lat),
+                      lng: parseFloat(lng),
+                    });
+                  } else resolve(p); // 주소 변환 실패 시 원래 데이터 유지
+                });
+              });
+            })
+          );
         }
+
+        setPost({ ...postData, places: placesWithCoords });
+
+        // Mapview 준비될 때까지 대기 후 길찾기 호출
+        if (placesWithCoords?.length && mapRef?.current?.getRoute) {
+          await mapRef.current.getRoute(placesWithCoords);
+        }
+      } catch (err) {
+        console.error(err);
+        if (err.response?.status === 401)
+          setError("로그인이 필요하거나 권한이 없습니다.");
+        else if (err.response?.status === 404)
+          setError("게시글을 찾을 수 없습니다.");
+        else setError("게시글을 불러오는 데 실패했습니다.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPost();
-  }, [id]);
-
-  useEffect(() => {
-    const preparePlacesCoords = async () => {
-      if (!post?.places?.length || !mapRef.current?.getRoute) return;
-
-      console.log("주소 목록:", post.places);
-
-      const placesWithCoords = await Promise.all(
-        post.places.map(async (p) => {
-          if (!p.address) return p;
-          try {
-            const coords = await getCoordsFromAddress(p.address);
-            return { ...p, ...coords }; // lat/lng 추가
-          } catch (err) {
-            console.error("좌표 변환 오류:", p.address, err);
-            return p;
-          }
-        })
-      );
-
-      console.log("좌표 변환 완료:", placesWithCoords);
-
-      mapRef.current.getRoute(placesWithCoords); // Mapview에 전달
-    };
-
-    preparePlacesCoords();
-  }, [post]);
+    fetchPostAndRoute();
+  }, [id, mapRef]);
 
   if (loading) return <div>로딩 중...</div>;
   if (error) return <div>{error}</div>;
   if (!post) return <div>게시글을 찾을 수 없습니다.</div>;
+
   return (
     <div className="post-course-page">
       <button className="back-button" onClick={handleGoBack}>
@@ -401,14 +369,7 @@ const PostCoursePage = () => {
           </div>
         ))}
       </div>
-      <RouteMap
-        start={{ lat: 37.5665, lng: 126.978 }}
-        end={{ lat: 37.57, lng: 126.992 }}
-        waypoints={[
-          { lat: 37.567, lng: 126.981 },
-          { lat: 37.568, lng: 126.985 },
-        ]}
-      />
+      <Mapview ref={mapRef} />
     </div>
   );
 };
