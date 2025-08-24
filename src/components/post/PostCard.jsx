@@ -297,15 +297,15 @@ const PostCard = ({ post, onPatch }) => {
       <div className="post-header">
         <div className="post-images">
           <img
-            src={post.photos?.[0] || "/default-image.png"}
+            src={post.places?.[0]?.photoUrl || "/default-image.png"}
             alt={post.title || "게시글 이미지"}
             onError={handleImageError}
             className="main-image"
             loading="lazy"
           />
-          {post.photos?.[1] ? (
+          {post.places?.[1]?.photoUrl ? (
             <img
-              src={post.photos[1]}
+              src={post.places[1].photoUrl}
               alt={`${post.title || "게시글"} 서브 이미지`}
               className="sub-image"
               onError={handleImageError}
@@ -321,7 +321,7 @@ const PostCard = ({ post, onPatch }) => {
       <div className="post-content">
         <div className="profile-date-section">
           <img
-            src={post.author?.profileImage || "/default-profile.png"}
+            src={post.author?.profileImageUrl || "/default-profile.png"}
             alt={`${getAuthorName()} 프로필`}
             className="profile-img"
             onError={handleProfileImageError}

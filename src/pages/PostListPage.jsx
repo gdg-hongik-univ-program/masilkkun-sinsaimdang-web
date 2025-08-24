@@ -48,6 +48,8 @@ const PostListPage = ({ sortOrder, setSortOrder }) => {
       }
 
       const response = await baseApi.get("/articles", { params });
+      console.log("🔥 서버 응답:", response.data.data);
+
       const content = response.data?.data?.content || []; // 여기서 content 가져오기
       setPosts(content);
       console.log("게시글:", content);
