@@ -226,7 +226,7 @@ const PostCard = ({ post }) => {
       <div className="post-content">
         <div className="profile-date-section">
           <img
-            src={post.author?.profileImage || "/default-profile.png"}
+            src={post.author?.profileImageUrl || "/default-profile.png"}
             alt={`${getAuthorName()} 프로필`}
             className="profile-img"
             onError={handleProfileImageError}

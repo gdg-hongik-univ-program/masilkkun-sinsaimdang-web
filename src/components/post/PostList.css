@@ -5,3 +5,23 @@
   width: 100%;
   height: 100%;
 }
+
+.post-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px; /* 비어있을 때도 공간 확보 */
+  border-radius: 16px;
+  padding: 40px 20px;
+  color: #666;
+  text-align: center;
+  transition: background 0.3s ease;
+}
+
+/* 아이콘 느낌 주고 싶다면 */
+.post-list-empty::before {
+  content: "📝";
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
