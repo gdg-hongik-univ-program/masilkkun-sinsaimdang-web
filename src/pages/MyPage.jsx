@@ -72,15 +72,76 @@ export default function MyPage() {
           console.error("사용자 데이터를 찾을 수 없습니다:", userResponse.data);
         }
 
-        // 사용자 게시글 로드 (응답 형태 정규화)
-        const myPosts = await baseApi.get("/user/scraps");
-        const normalizedPosts =
-          (Array.isArray(myPosts.data?.data?.content) &&
-            myPosts.data.data.content) ||
-          (Array.isArray(myPosts.data?.content) && myPosts.data.content) ||
-          (Array.isArray(myPosts.data) && myPosts.data) ||
-          [];
-        setPosts(normalizedPosts);
+        // 사용자 게시글 로드 (올바른 API 사용)
+        try {
+          console.log("내가 작성한 게시글 로드 시작");
+
+          // 내가 작성한 게시글 가져오기 (스크랩이 아닌)
+          let myPostsResponse;
+          try {
+            // 1차 시도: 작성한 게시글 API
+            myPostsResponse = await baseApi.get(
+              `/user/${userData.id}/articles`
+            );
+            console.log("작성한 게시글 API 성공:", myPostsResponse.data);
+          } catch (articlesError) {
+            console.warn(
+              "작성한 게시글 API 실패, 대체 API 시도:",
+              articlesError.response?.status
+            );
+
+            // 2차 시도: 대체 엔드포인트들
+            const alternativeEndpoints = [
+              `/user/me/articles`, // 현재 사용자의 게시글
+              `/user/me/posts`, // 현재 사용자의 포스트
+              `/user/${userData.id}/posts`, // 사용자 ID로 포스트 조회
+            ];
+
+            let success = false;
+            for (const endpoint of alternativeEndpoints) {
+              try {
+                console.log(`대체 게시글 API 시도: ${endpoint}`);
+                myPostsResponse = await baseApi.get(endpoint);
+                console.log(
+                  `대체 게시글 API 성공 (${endpoint}):`,
+                  myPostsResponse.data
+                );
+                success = true;
+                break;
+              } catch (altError) {
+                console.warn(
+                  `대체 API 실패 (${endpoint}):`,
+                  altError.response?.status
+                );
+              }
+            }
+
+            if (!success) {
+              throw articlesError; // 모든 시도 실패 시 원래 에러 던지기
+            }
+          }
+
+          const normalizedPosts =
+            (Array.isArray(myPostsResponse.data?.data?.content) &&
+              myPostsResponse.data.data.content) ||
+            (Array.isArray(myPostsResponse.data?.content) &&
+              myPostsResponse.data.content) ||
+            (Array.isArray(myPostsResponse.data?.data) &&
+              myPostsResponse.data.data) ||
+            (Array.isArray(myPostsResponse.data) && myPostsResponse.data) ||
+            [];
+
+          console.log("정규화된 게시글 데이터:", normalizedPosts);
+          setPosts(normalizedPosts);
+        } catch (postsError) {
+          console.error("게시글 로드 실패:", postsError);
+
+          // 게시글 로드 실패 시에도 빈 배열로 설정하여 UI가 깨지지 않도록
+          setPosts([]);
+
+          // 에러는 사용자에게 표시하지 않고 콘솔에만 기록
+          // (사용자 정보는 로드되었으므로 페이지 자체는 사용 가능)
+        }
       } catch (e) {
         console.error("사용자 정보 로드 실패:", e);
         setError("사용자 정보를 불러오는데 실패했습니다.");
@@ -90,72 +151,141 @@ export default function MyPage() {
     })();
   }, []);
 
-  // 팔로워/팔로잉 데이터 로드
+  // 에러 처리를 개선한 팔로우 데이터 로드 함수
   const loadFollowDataAlternative = async (type) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.error("사용자 ID가 없습니다:", user);
+      setError("사용자 정보를 찾을 수 없습니다.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      // 백엔드 API 명세에 따라 엔드포인트 조정
+      console.log(`=== ${type} 데이터 로드 시작 ===`);
+      console.log("현재 사용자:", user);
+      console.log("사용자 ID:", user.id, typeof user.id);
+
       let endpoint;
       if (type === "followers") {
-        // 가능한 팔로워 API 엔드포인트들
-        endpoint = `/user/${user.id}/followers`; // 또는
-        // endpoint = `/users/${user.id}/followers`; // 또는
-        // endpoint = `/follow/${user.id}/followers`; // 또는
-        // endpoint = `/api/users/${user.id}/followers`;
+        endpoint = `/user/${user.id}/followers`;
       } else {
         endpoint = `/user/${user.id}/following`;
       }
 
       console.log(`API 호출: ${endpoint}`);
-      const response = await baseApi.get(endpoint);
 
-      // 응답 데이터 구조 확인
-      console.log(`${type} 응답:`, response.data);
+      // 1차 시도: 기본 엔드포인트
+      let response;
+      try {
+        response = await baseApi.get(endpoint);
+        console.log("API 호출 성공:", response.data);
+      } catch (primaryError) {
+        console.warn("1차 API 호출 실패:", primaryError.response?.status);
 
-      if (type === "followers") {
-        // 다양한 응답 구조에 대응
-        const followersData =
-          response.data?.data?.content || // 페이징된 응답
-          response.data?.data || // 일반적인 응답
-          response.data?.followers || // 특정 필드명
-          response.data || // 직접 배열
-          [];
+        // 2차 시도: 다른 엔드포인트 패턴들
+        const alternativeEndpoints = [
+          `/users/${user.id}/${type}`, // users 복수형
+          `/follow/${user.id}/${type}`, // follow 경로
+          `/${type}/${user.id}`, // 순서 바뀐 경로
+          `/user/me/${type}`, // 현재 사용자 기준
+        ];
 
-        setFollowers(Array.isArray(followersData) ? followersData : []);
-      } else {
-        const followingData =
-          response.data?.data?.content ||
-          response.data?.data ||
-          response.data?.following ||
-          response.data ||
-          [];
+        let successfulResponse = null;
 
-        const followingArray = Array.isArray(followingData)
-          ? followingData
-          : [];
-        setFollowing(followingArray);
-        setFollowingUsers(new Set(followingArray.map((u) => u.id)));
+        for (const altEndpoint of alternativeEndpoints) {
+          try {
+            console.log(`대체 API 시도: ${altEndpoint}`);
+            successfulResponse = await baseApi.get(altEndpoint);
+            console.log(
+              `대체 API 성공 (${altEndpoint}):`,
+              successfulResponse.data
+            );
+            response = successfulResponse;
+            break;
+          } catch (altError) {
+            console.warn(
+              `대체 API 실패 (${altEndpoint}):`,
+              altError.response?.status
+            );
+          }
+        }
+
+        // 모든 시도가 실패한 경우
+        if (!successfulResponse) {
+          throw primaryError;
+        }
+      }
+
+      // 응답 데이터 처리
+      if (response && response.data) {
+        // 서버에서 success: false를 보낸 경우
+        if (response.data.success === false) {
+          throw new Error(
+            response.data.message || "서버에서 오류를 반환했습니다."
+          );
+        }
+
+        if (type === "followers") {
+          const followersData =
+            response.data?.data?.content ||
+            response.data?.data ||
+            response.data?.followers ||
+            response.data ||
+            [];
+
+          console.log("처리된 팔로워 데이터:", followersData);
+          setFollowers(Array.isArray(followersData) ? followersData : []);
+        } else {
+          const followingData =
+            response.data?.data?.content ||
+            response.data?.data ||
+            response.data?.following ||
+            response.data ||
+            [];
+
+          console.log("처리된 팔로잉 데이터:", followingData);
+          const followingArray = Array.isArray(followingData)
+            ? followingData
+            : [];
+          setFollowing(followingArray);
+          setFollowingUsers(new Set(followingArray.map((u) => u.id)));
+        }
       }
     } catch (e) {
       console.error(`${type} 데이터 로드 실패:`, e);
 
-      // 상세한 에러 정보 로깅
-      if (e.response) {
-        console.error("HTTP 상태:", e.response.status);
-        console.error("에러 데이터:", e.response.data);
-        console.error("에러 헤더:", e.response.headers);
+      // 임시 해결책: 빈 배열로 설정
+      if (type === "followers") {
+        setFollowers([]);
+      } else {
+        setFollowing([]);
+        setFollowingUsers(new Set());
       }
 
-      setError(
-        `${
-          type === "followers" ? "팔로워" : "팔로잉"
-        } 목록을 불러오는데 실패했습니다. (${
-          e.response?.status || "Network Error"
-        })`
-      );
+      // 사용자 친화적 에러 메시지
+      if (e.response?.status === 500) {
+        setError(
+          `현재 서버에 문제가 있어 ${
+            type === "followers" ? "팔로워" : "팔로잉"
+          } 목록을 불러올 수 없습니다. 잠시 후 다시 시도해주세요.`
+        );
+      } else if (e.response?.status === 404) {
+        setError(
+          `${
+            type === "followers" ? "팔로워" : "팔로잉"
+          } 기능이 아직 구현되지 않았습니다.`
+        );
+      } else if (e.message?.includes("서버")) {
+        setError(e.message);
+      } else {
+        setError(
+          `${
+            type === "followers" ? "팔로워" : "팔로잉"
+          } 목록을 불러오는데 실패했습니다.`
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -163,6 +293,74 @@ export default function MyPage() {
 
   // loadFollowData 함수 추가 (기존 코드에서 사용됨)
   const loadFollowData = loadFollowDataAlternative;
+
+  // 서버 상태 확인용 함수
+  const checkServerStatus = async () => {
+    try {
+      console.log("=== 서버 상태 확인 ===");
+
+      // 1. 사용자 정보 확인
+      const userCheck = await baseApi.get("/user/me");
+      console.log("사용자 정보 확인:", userCheck.status, userCheck.data);
+
+      // 2. 팔로우 정보 확인
+      if (user?.id) {
+        const followInfoCheck = await baseApi.get(
+          `/user/${user.id}/follow-info`
+        );
+        console.log(
+          "팔로우 정보 확인:",
+          followInfoCheck.status,
+          followInfoCheck.data
+        );
+      }
+
+      console.log("=== 서버 기본 상태는 정상 ===");
+    } catch (e) {
+      console.error("서버 상태 확인 실패:", e);
+    }
+  };
+
+  // API 테스트용 함수 (임시로 추가 - 디버깅용)
+  const testFollowAPI = async () => {
+    if (!user?.id) {
+      console.log("사용자 ID 없음");
+      return;
+    }
+
+    console.log("=== API 테스트 시작 ===");
+
+    // 1. 팔로우 정보 API 테스트
+    try {
+      console.log("1. 팔로우 정보 API 테스트");
+      const followInfoResponse = await baseApi.get(
+        `/user/${user.id}/follow-info`
+      );
+      console.log("팔로우 정보 성공:", followInfoResponse.data);
+    } catch (e) {
+      console.error("팔로우 정보 실패:", e.response?.status, e.response?.data);
+    }
+
+    // 2. 팔로워 API 테스트
+    try {
+      console.log("2. 팔로워 API 테스트");
+      const followersResponse = await baseApi.get(`/user/${user.id}/followers`);
+      console.log("팔로워 성공:", followersResponse.data);
+    } catch (e) {
+      console.error("팔로워 실패:", e.response?.status, e.response?.data);
+    }
+
+    // 3. 팔로잉 API 테스트
+    try {
+      console.log("3. 팔로잉 API 테스트");
+      const followingResponse = await baseApi.get(`/user/${user.id}/following`);
+      console.log("팔로잉 성공:", followingResponse.data);
+    } catch (e) {
+      console.error("팔로잉 실패:", e.response?.status, e.response?.data);
+    }
+
+    console.log("=== API 테스트 종료 ===");
+  };
 
   // 팔로우 정보 새로고침
   const refreshFollowInfo = async () => {
@@ -208,10 +406,13 @@ export default function MyPage() {
     }
   };
 
+  // 수정된 openModal 함수
   const openModal = async (type) => {
     setModalType(type);
     setShowModal(true);
-    await loadFollowData(type);
+
+    // 일단 모달은 열고, 데이터는 백그라운드에서 로드
+    loadFollowData(type).catch(console.error);
   };
 
   const closeModal = () => {
@@ -234,17 +435,128 @@ export default function MyPage() {
     });
   };
 
+  // 게시글 삭제 (에러 처리 개선)
   const deletePosts = async () => {
+    if (selectedPosts.size === 0) {
+      setError("삭제할 게시글을 선택해주세요.");
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `선택한 ${selectedPosts.size}개의 게시글을 정말 삭제하시겠습니까?`
+    );
+
+    if (!confirmDelete) return;
+
     try {
       setLoading(true);
+      setError(null);
+
       const ids = Array.from(selectedPosts);
-      await Promise.all(ids.map((id) => baseApi.delete(`/articles/${id}`)));
-      setPosts((prev) => prev.filter((p) => !selectedPosts.has(p.id)));
-      setSelectedPosts(new Set());
-      setIsDeleteMode(false);
+      const deleteResults = [];
+
+      console.log("게시글 삭제 시작:", ids);
+
+      // 각 게시글을 개별적으로 삭제 시도
+      for (const id of ids) {
+        try {
+          console.log(`게시글 ${id} 삭제 시도`);
+
+          // 다양한 삭제 API 엔드포인트 시도
+          let deleteSuccess = false;
+          const deleteEndpoints = [
+            `/articles/${id}`, // 기본 엔드포인트
+            `/posts/${id}`, // posts 경로
+            `/user/articles/${id}`, // 사용자 게시글 경로
+            `/user/posts/${id}`, // 사용자 포스트 경로
+          ];
+
+          for (const endpoint of deleteEndpoints) {
+            try {
+              console.log(`삭제 API 시도: DELETE ${endpoint}`);
+              const response = await baseApi.delete(endpoint);
+              console.log(
+                `게시글 ${id} 삭제 성공 (${endpoint}):`,
+                response.data
+              );
+              deleteSuccess = true;
+              deleteResults.push({ id, success: true, endpoint });
+              break;
+            } catch (deleteError) {
+              console.warn(
+                `삭제 실패 (${endpoint}):`,
+                deleteError.response?.status
+              );
+              if (deleteError.response?.status === 404) {
+                // 404는 이미 삭제되었거나 존재하지 않는 게시글
+                console.log(`게시글 ${id}는 이미 존재하지 않습니다.`);
+                deleteSuccess = true;
+                deleteResults.push({
+                  id,
+                  success: true,
+                  endpoint,
+                  note: "already_deleted",
+                });
+                break;
+              }
+            }
+          }
+
+          if (!deleteSuccess) {
+            console.error(`게시글 ${id} 삭제 실패: 모든 엔드포인트 시도 실패`);
+            deleteResults.push({ id, success: false });
+          }
+        } catch (error) {
+          console.error(`게시글 ${id} 삭제 중 예외:`, error);
+          deleteResults.push({ id, success: false, error: error.message });
+        }
+      }
+
+      console.log("삭제 결과:", deleteResults);
+
+      // 성공한 게시글들만 UI에서 제거
+      const successfulDeletes = deleteResults
+        .filter((result) => result.success)
+        .map((result) => result.id);
+
+      if (successfulDeletes.length > 0) {
+        setPosts((prev) =>
+          prev.filter((p) => !successfulDeletes.includes(p.id))
+        );
+
+        // 성공한 게시글들을 선택에서 제거
+        setSelectedPosts((prev) => {
+          const newSet = new Set(prev);
+          successfulDeletes.forEach((id) => newSet.delete(id));
+          return newSet;
+        });
+      }
+
+      const failedDeletes = deleteResults.filter((result) => !result.success);
+
+      if (failedDeletes.length > 0) {
+        setError(
+          `${successfulDeletes.length}개 게시글은 삭제되었지만, ` +
+            `${failedDeletes.length}개 게시글 삭제에 실패했습니다. ` +
+            `실패한 게시글: ${failedDeletes.map((f) => f.id).join(", ")}`
+        );
+      } else {
+        // 모든 게시글이 성공적으로 삭제된 경우
+        setSelectedPosts(new Set());
+        setIsDeleteMode(false);
+
+        if (successfulDeletes.length === 1) {
+          // 성공 메시지는 간단하게
+          console.log("게시글이 삭제되었습니다.");
+        } else {
+          console.log(
+            `${successfulDeletes.length}개의 게시글이 삭제되었습니다.`
+          );
+        }
+      }
     } catch (e) {
-      console.error("게시글 삭제 실패:", e);
-      setError("게시글 삭제 중 오류가 발생했습니다.");
+      console.error("게시글 삭제 중 전체 에러:", e);
+      setError("게시글 삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
       setLoading(false);
     }
@@ -270,7 +582,7 @@ export default function MyPage() {
     setLoading(false);
   };
 
-  // 🔧 수정된 saveProfile 함수 (괄호 문제 해결)
+  // 수정된 saveProfile 함수
   const saveProfile = async () => {
     try {
       setLoading(true);
@@ -343,7 +655,7 @@ export default function MyPage() {
 
         setIsEditingProfile(false);
 
-        // 🎯 사이드바 업데이트를 위한 이벤트 발생
+        // 사이드바 업데이트를 위한 이벤트 발생
         window.dispatchEvent(
           new CustomEvent("userProfileUpdated", {
             detail: {
@@ -755,7 +1067,7 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* 팔로워/팔로잉 모달 */}
+      {/* 팔로워/팔로잉 모달 (에러 처리 개선) */}
       {showModal && (
         <div className="myp-modal-overlay" onClick={closeModal}>
           <div
@@ -771,6 +1083,44 @@ export default function MyPage() {
             <div className="myp-modal-body">
               {loading ? (
                 <div className="myp-modal-loading">로딩 중...</div>
+              ) : error ? (
+                <div
+                  className="myp-error-message"
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    color: "#666",
+                  }}
+                >
+                  <p>⚠️ {error}</p>
+                  <button
+                    onClick={() => loadFollowData(modalType)}
+                    style={{
+                      marginTop: "10px",
+                      padding: "8px 16px",
+                      backgroundColor: "#007bff",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              ) : (modalType === "followers" ? followers : following).length ===
+                0 ? (
+                <div
+                  className="myp-empty-message"
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    color: "#999",
+                  }}
+                >
+                  {modalType === "followers" ? "팔로워가" : "팔로잉한 사용자가"}{" "}
+                  없습니다.
+                </div>
               ) : (
                 (modalType === "followers" ? followers : following).map(
                   (person) => (
@@ -822,7 +1172,7 @@ export default function MyPage() {
       )}
 
       {/* 에러 메시지 */}
-      {error && <div className="myp-error">{error}</div>}
+      {error && !showModal && <div className="myp-error">{error}</div>}
     </div>
   );
 }

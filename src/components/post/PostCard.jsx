@@ -1,55 +1,96 @@
-import React, { useState, useEffect, useMemo } from "react";
+// src/components/post/PostCard.jsx
+import React, { useState, useEffect } from "react";
 import "./PostCard.css";
 import { FaHeart, FaBookmark } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import baseApi from "../../api/baseApi";
 
-const PostCard = ({ post }) => {
-  const [liked, setLiked] = useState(false); // 표시 상태
-  const [bookmarked, setBookmarked] = useState(false); // 표시 상태
-  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
-  const [bookmarkCount, setBookmarkCount] = useState(post.scrapCount || 0);
+// ✅ 내 액션(색 유지)을 위한 세션 캐시
+const ACTIONS_KEY = "articleActions"; // { [id]: { isLiked, isScraped, likeCount, scrapCount, ts } }
 
+const readActions = () => {
+  try {
+    return JSON.parse(sessionStorage.getItem(ACTIONS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const writeActions = (obj) => {
+  try {
+    sessionStorage.setItem(ACTIONS_KEY, JSON.stringify(obj));
+  } catch {}
+};
+
+const patchArticleCache = (id, patch) => {
+  const map = readActions();
+  map[String(id)] = { ...(map[String(id)] || {}), ...patch, ts: Date.now() };
+  writeActions(map);
+};
+
+const PostCard = ({ post, onPatch }) => {
   const navigate = useNavigate();
 
-  console.log("🔥 post.photos:", post.photos);
+  // 표시/카운트 상태
+  const [liked, setLiked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likeCount ?? 0);
+  const [bookmarkCount, setBookmarkCount] = useState(post.scrapCount ?? 0);
 
-  // 🔸 리스트가 상세에서의 변경을 알고 시작하도록 초기 동기화
+  // 서버/부모가 주는 값(없을 수도 있으니 안전하게)
+  const likedFromProps = !!(post.isLiked ?? post.liked ?? post.isLike);
+  const bookmarkedFromProps = !!(
+    post.isScraped ??
+    post.scraped ??
+    post.bookmarked
+  );
+
+  // 👉 props로 1차 동기화 후, 세션 캐시(내 액션)로 최종 오버라이드 → 뒤로가도 색 유지
   useEffect(() => {
-    setLiked(!!post.isLiked);
-    setBookmarked(!!post.isScraped);
+    // 1) props 기준
+    setLiked(likedFromProps);
+    setBookmarked(bookmarkedFromProps);
     setLikeCount(post.likeCount ?? 0);
     setBookmarkCount(post.scrapCount ?? 0);
-  }, [post.id, post.isLiked, post.isScraped, post.likeCount, post.scrapCount]);
 
-  const handleCardClick = () => {
-    navigate(`/post/${post.id}`);
-  };
+    // 2) 내 액션이 있으면 최종 적용 (색 유지의 핵심)
+    const cached = readActions()[String(post.id)];
+    if (cached) {
+      if (cached.isLiked !== undefined) setLiked(!!cached.isLiked);
+      if (cached.isScraped !== undefined) setBookmarked(!!cached.isScraped);
+      if (typeof cached.likeCount === "number") setLikeCount(cached.likeCount);
+      if (typeof cached.scrapCount === "number")
+        setBookmarkCount(cached.scrapCount);
+    }
+  }, [
+    post.id,
+    likedFromProps,
+    bookmarkedFromProps,
+    post.likeCount,
+    post.scrapCount,
+  ]);
+
+  const handleCardClick = () => navigate(`/post/${post.id}`);
 
   const handleProfileClick = (e) => {
     e.stopPropagation();
     const authorId = post.author?.id || post.authorId;
-    if (authorId) {
-      navigate(`/profile/${authorId}`);
-    }
+    if (authorId) navigate(`/profile/${authorId}`);
   };
 
   const safeGetToken = () => {
     try {
       if (typeof window !== "undefined") {
         return (
-          (typeof sessionStorage !== "undefined"
-            ? sessionStorage.getItem("accessToken")
-            : null) ||
-          (typeof localStorage !== "undefined"
-            ? localStorage.getItem("accessToken")
-            : null)
+          sessionStorage.getItem("accessToken") ||
+          localStorage.getItem("accessToken")
         );
       }
-    } catch (_) {}
+    } catch {}
     return null;
   };
 
+  // 좋아요 토글 (성공 시 세션에 내 상태 저장 → 뒤로가도 유지)
   const toggleLike = async (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -64,30 +105,51 @@ const PostCard = ({ post }) => {
       if (!liked) {
         await baseApi.post(`/articles/${post.id}/likes`);
         setLiked(true);
-        setLikeCount((prev) => prev + 1);
+        setLikeCount((v) => {
+          const next = v + 1;
+          patchArticleCache(post.id, { isLiked: true, likeCount: next });
+          return next;
+        });
+        onPatch?.(post.id, { isLiked: true, likeCount: (likeCount ?? 0) + 1 });
       } else {
         await baseApi.delete(`/articles/${post.id}/likes`);
         setLiked(false);
-        setLikeCount((prev) => Math.max(0, prev - 1));
+        setLikeCount((v) => {
+          const next = Math.max(0, v - 1);
+          patchArticleCache(post.id, { isLiked: false, likeCount: next });
+          return next;
+        });
+        onPatch?.(post.id, {
+          isLiked: false,
+          likeCount: Math.max(0, (likeCount ?? 0) - 1),
+        });
       }
     } catch (err) {
       const msg = err.response?.data?.message || "";
       const status = err.response?.status;
 
-      // 서버는 이미 좋아요 상태인데 UI가 뒤쳐져 있었다면 → 즉시 취소 호출
+      // 서버와 불일치 보정
       if (!liked && status === 400 && /이미\s*좋아요/i.test(msg)) {
         try {
           await baseApi.delete(`/articles/${post.id}/likes`);
           setLiked(false);
-          setLikeCount((prev) => Math.max(0, prev - 1));
+          setLikeCount((v) => {
+            const next = Math.max(0, v - 1);
+            patchArticleCache(post.id, { isLiked: false, likeCount: next });
+            return next;
+          });
+          onPatch?.(post.id, { isLiked: false });
           return;
         } catch {}
       }
-
-      // 반대로 UI는 true인데 서버는 이미 취소됨
       if (liked && status === 400 && /좋아요를\s*누르지\s*않은/i.test(msg)) {
         setLiked(false);
-        setLikeCount((prev) => Math.max(0, prev - 1));
+        setLikeCount((v) => {
+          const next = Math.max(0, v - 1);
+          patchArticleCache(post.id, { isLiked: false, likeCount: next });
+          return next;
+        });
+        onPatch?.(post.id, { isLiked: false });
         return;
       }
 
@@ -95,6 +157,7 @@ const PostCard = ({ post }) => {
     }
   };
 
+  // 스크랩 토글 (성공 시 세션에 내 상태 저장 → 뒤로가도 유지)
   const toggleBookmark = async (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -107,35 +170,71 @@ const PostCard = ({ post }) => {
 
     try {
       if (!bookmarked) {
-        // 스크랩 추가
-        await baseApi.post(`/articles/${post.id}/scraps`);
+        // 서버별 요구 데이터 차이 대응
+        try {
+          await baseApi.post(
+            `/articles/${post.id}/scraps`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } catch {
+          await baseApi.post(`/articles/${post.id}/scraps`, null, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
         setBookmarked(true);
-        setBookmarkCount((prev) => prev + 1);
+        setBookmarkCount((v) => {
+          const next = v + 1;
+          patchArticleCache(post.id, { isScraped: true, scrapCount: next });
+          return next;
+        });
+        onPatch?.(post.id, {
+          isScraped: true,
+          scrapCount: (bookmarkCount ?? 0) + 1,
+        });
       } else {
-        // 스크랩 취소
         await baseApi.delete(`/articles/${post.id}/scraps`);
         setBookmarked(false);
-        setBookmarkCount((prev) => Math.max(0, prev - 1));
+        setBookmarkCount((v) => {
+          const next = Math.max(0, v - 1);
+          patchArticleCache(post.id, { isScraped: false, scrapCount: next });
+          return next;
+        });
+        onPatch?.(post.id, {
+          isScraped: false,
+          scrapCount: Math.max(0, (bookmarkCount ?? 0) - 1),
+        });
       }
     } catch (err) {
       const msg = err.response?.data?.message || "";
       const status = err.response?.status;
 
-      // 🔥 상세에서 이미 스크랩된 상태로 뒤로 왔는데 카드 UI가 늦게 동기화된 경우
-      // 첫 클릭이 '취소' 의도이므로 400 "이미 스크랩"이면 바로 DELETE 실행
       if (!bookmarked && status === 400 && /이미\s*스크랩/i.test(msg)) {
         try {
           await baseApi.delete(`/articles/${post.id}/scraps`);
           setBookmarked(false);
-          setBookmarkCount((prev) => Math.max(0, prev - 1));
-          return; // 한 번의 클릭으로 취소 끝
+          setBookmarkCount((v) => {
+            const next = Math.max(0, v - 1);
+            patchArticleCache(post.id, { isScraped: false, scrapCount: next });
+            return next;
+          });
+          onPatch?.(post.id, { isScraped: false });
+          return;
         } catch {}
       }
-
-      // 반대로 UI는 true인데 서버는 이미 취소됨
       if (bookmarked && status === 400 && /스크랩하지\s*않은/i.test(msg)) {
         setBookmarked(false);
-        setBookmarkCount((prev) => Math.max(0, prev - 1));
+        setBookmarkCount((v) => {
+          const next = Math.max(0, v - 1);
+          patchArticleCache(post.id, { isScraped: false, scrapCount: next });
+          return next;
+        });
+        onPatch?.(post.id, { isScraped: false });
         return;
       }
 
@@ -155,30 +254,26 @@ const PostCard = ({ post }) => {
   const formatDate = (dateString) => {
     if (!dateString) return "날짜 없음";
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "날짜 없음";
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}년 ${month}월 ${day}일`;
+      const d = new Date(dateString);
+      if (isNaN(d.getTime())) return "날짜 없음";
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}년 ${m}월 ${day}일`;
     } catch {
       return "날짜 없음";
     }
   };
 
-  const getAuthorName = () => {
-    return (
-      post.author?.nickname || post.author?.name || post.authorName || "익명"
-    );
-  };
+  const getAuthorName = () =>
+    post.author?.nickname || post.author?.name || post.authorName || "익명";
 
   const handleImageError = (e) => {
-    if (e.target.src.includes("default-image.png")) return; // 이미 기본 이미지면 중단
+    if (e.target.src.includes("default-image.png")) return;
     e.target.src = "/default-image.png";
   };
 
   const handleProfileImageError = (e) => {
-    // 이미 기본 이미지면 중단
     if (e.target.src.includes("default-profile.png")) return;
     e.target.src = "/default-profile.png";
   };
@@ -191,9 +286,9 @@ const PostCard = ({ post }) => {
   };
 
   const formatCount = (count) => {
-    if (count >= 1000000) return (count / 1000000).toFixed(1) + "M";
-    if (count >= 1000) return (count / 1000).toFixed(1) + "K";
-    return count.toString();
+    if (count >= 1_000_000) return (count / 1_000_000).toFixed(1) + "M";
+    if (count >= 1_000) return (count / 1_000).toFixed(1) + "K";
+    return String(count ?? 0);
   };
 
   return (
@@ -270,6 +365,7 @@ const PostCard = ({ post }) => {
               <FaBookmark />
               <span>{formatCount(bookmarkCount)}</span>
             </button>
+
             <button
               className={`action-btn like-btn ${liked ? "active" : ""}`}
               onClick={toggleLike}
