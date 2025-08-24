@@ -426,10 +426,11 @@ const PostCoursePage = () => {
               {place.placeName}
             </div>
             <div className="detail-sub">{place.address}</div>
+            {/* 🔹 place.photoUrl 사용 */}
             <img
               className="detail-img"
-              src={post.photos?.[index] || "/default-image.png"}
-              alt={`썸네일${index + 1}`}
+              src={place.photoUrl || "/default-image.png"}
+              alt={`${place.placeName} 이미지`}
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = "/default-image.png";
