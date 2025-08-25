@@ -1,54 +1,80 @@
-import { useCategory } from "../context/CategoryContext";
+// src/pages/ScrapbookPage.jsx
 import { useState, useEffect } from "react";
+import { useCategory } from "../context/CategoryContext";
 import Region from "../components/layout/Region";
 import PostList from "../components/post/PostList";
+import CategoryFilter from "../components/post/CategoryFilter";
+import SortSelector from "../components/post/SortSelector"; // ✅ 추가
 import baseApi from "../api/baseApi";
 import "./ScrapbookPage.css";
 
-const ScrapbookPage = () => {
-  const { selectedCategory, setSelectedCategory } = useCategory();
-  const [region, setRegion] = useState("");
-  const [sortOrder, setSortOrder] = useState("기본순");
-  const [posts, setPosts] = useState([]);
+const CONTENT_WIDTH = 720; // 지역바/카테고리바/리스트 공통 폭
 
-  // 스크랩한 게시글 목록 조회
+const K2E = { 여행지: "TRAVEL_SPOT", 맛집: "RESTAURANT", 카페: "CAFE" };
+const E2E = {
+  TRAVEL_SPOT: "TRAVEL_SPOT",
+  RESTAURANT: "RESTAURANT",
+  CAFE: "CAFE",
+};
+
+function normalizePostTags(post) {
+  const raw =
+    post?.tags ?? post?.tagList ?? post?.categories ?? post?.category ?? [];
+  const arr = Array.isArray(raw) ? raw : [raw];
+  return arr
+    .map((t) => {
+      if (!t) return null;
+      if (typeof t === "string") return E2E[t] || E2E[K2E[t]] || null;
+      const v = t.value ?? t.code ?? t.name ?? t.label;
+      return v ? E2E[v] || E2E[K2E[v]] || null : null;
+    })
+    .filter(Boolean);
+}
+
+function matchBySelectedTags(post, selected) {
+  if (!selected || selected.length === 0) return true;
+  const postTags = normalizePostTags(post);
+  if (postTags.length === 0) return false;
+  const want = new Set(selected.map((s) => s.value));
+  for (const v of want) if (!postTags.includes(v)) return false;
+  return true;
+}
+
+const ScrapbookPage = () => {
+  const { selectedCategory } = useCategory(); // 다른 곳에서 필요하면 유지
+  const [region, setRegion] = useState("");
+  const [sortOrder, setSortOrder] = useState("기본순"); // ✅ 기존 그대로 사용
+  const [posts, setPosts] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]); // 멀티선택, 기본 미선택
+
+  const getToken = () =>
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken") ||
+    "";
+
   useEffect(() => {
     const fetchScrapedPosts = async () => {
-      const token = sessionStorage.getItem("accessToken");
+      const token = getToken();
       if (!token) {
         console.log("로그인이 필요합니다.");
         return;
       }
-
       try {
-        const tagMap = {
-          여행지: "TRAVEL_SPOT",
-          맛집: "RESTAURANT",
-          카페: "CAFE",
-        };
+        const params = { page: 0, size: 10, sort: "createdAt,desc" };
+        const values = selectedTags.map((t) => t.value);
+        if (values.length === 1) params.tag = values[0];
+        if (values.length > 1) params.tags = values.join(",");
 
-        const tagsQuery = tagMap[selectedCategory] || "";
-        console.log(`[스크랩북] ${selectedCategory} 조회 시작`);
-
-        // API 엔드포인트 수정 시도
-        const res = await baseApi.get("user/scraps", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            page: 0,
-            size: 10,
-            sort: "createdAt,desc",
-            ...(tagsQuery && { tag: tagsQuery }), // tag가 있을 때만 추가
-          },
+        const res = await baseApi.get("/user/scraps", {
+          headers: { Authorization: `Bearer ${token}` },
+          params,
         });
 
-        const postsData = res.data.data?.content || [];
-        console.log(
-          `[스크랩북] ${selectedCategory} 조회 완료: ${postsData.length}개`
+        const serverList = res.data?.data?.content || [];
+        const filtered = serverList.filter((p) =>
+          matchBySelectedTags(p, selectedTags)
         );
-
-        setPosts(postsData);
+        setPosts(filtered);
       } catch (err) {
         console.error(
           "[스크랩북] API 오류:",
@@ -59,103 +85,89 @@ const ScrapbookPage = () => {
     };
 
     fetchScrapedPosts();
-  }, [selectedCategory]);
+  }, [selectedTags]);
 
-  // 스크랩 추가/취소 함수
   const handleScrapToggle = async (articleId, isCurrentlyScraped) => {
-    const token = sessionStorage.getItem("accessToken");
+    const token = getToken();
     if (!token) {
       alert("로그인이 필요합니다.");
       return;
     }
-
     try {
       if (isCurrentlyScraped) {
-        console.log(`[스크랩] 취소 시도: ${articleId}`);
-        // 스크랩 취소 (DELETE)
-        await baseApi.delete(`api/articles/${articleId}/scraps`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        await baseApi.delete(`/articles/${articleId}/scraps`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        // 스크랩 목록에서 해당 게시글 제거
-        setPosts((prevPosts) =>
-          prevPosts.filter((post) => post.id !== articleId)
-        );
-        console.log(`[스크랩] 취소 완료: ${articleId}`);
+        setPosts((prev) => prev.filter((p) => p.id !== articleId));
         alert("스크랩이 취소되었습니다.");
       } else {
-        console.log(`[스크랩] 추가 시도: ${articleId}`);
-        // 스크랩 추가 (POST)
         await baseApi.post(
-          `api/articles/${articleId}/scraps`,
+          `/articles/${articleId}/scraps`,
           {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log(`[스크랩] 추가 완료: ${articleId}`);
         alert("스크랩에 추가되었습니다.");
       }
     } catch (err) {
       console.error("[스크랩] 처리 오류:", err.response?.status);
-      if (err.response?.status === 401) {
+      if (err.response?.status === 401)
         alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
-      } else {
-        alert("스크랩 처리 중 오류가 발생했습니다.");
-      }
+      else alert("스크랩 처리 중 오류가 발생했습니다.");
     }
   };
 
   return (
     <div className="scrapbook-page">
-      {/* 마이페이지와 같은 스타일의 헤더 */}
       <div className="page-header">
         <h3 className="page-title" style={{ textAlign: "center" }}>
           스크랩북
         </h3>
       </div>
 
-      <div className="top-bar">
-        <Region />
+      {/* 지역 선택바 */}
+      <div
+        className="top-bar"
+        style={{
+          width: `min(100%, ${CONTENT_WIDTH}px)`,
+          margin: "0 auto",
+          padding: 0,
+          boxSizing: "border-box",
+        }}
+      >
+        <Region value={region} onChange={setRegion} />
       </div>
 
-      <div className="filter-bar">
-        <div className="category-btns">
-          {["여행지", "맛집", "카페"].map((cat) => (
-            <button
-              key={cat}
-              className={`category-btn ${
-                selectedCategory === cat ? "active" : ""
-              }`}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
+      {/* 카테고리 + 정렬 */}
+      <div
+        className="filter-bar"
+        style={{
+          width: `min(100%, ${CONTENT_WIDTH}px)`,
+          margin: "0 auto",
+          padding: 0,
+          boxSizing: "border-box",
+        }}
+      >
+        <div className="filter-chips">
+          <CategoryFilter
+            selectedCategories={selectedTags}
+            onCategoryChange={setSelectedTags}
+          />
         </div>
 
-        <select
-          className="sort-select"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-        >
-          <option value="기본순">기본순</option>
-          <option value="좋아요순">좋아요순</option>
-        </select>
+        {/* ✅ SortSelector 사용 */}
+        <SortSelector value={sortOrder} onChange={setSortOrder} />
       </div>
 
-      <PostList
-        posts={posts}
-        region={region}
-        category={selectedCategory}
-        sortOrder={sortOrder}
-        isScrapMode={true}
-        onScrapToggle={handleScrapToggle}
-      />
+      {/* 리스트 */}
+      <div style={{ width: `min(100%, ${CONTENT_WIDTH}px)`, margin: "0 auto" }}>
+        <PostList
+          posts={posts}
+          region={region}
+          sortOrder={sortOrder}
+          isScrapMode
+          onScrapToggle={handleScrapToggle}
+        />
+      </div>
     </div>
   );
 };
