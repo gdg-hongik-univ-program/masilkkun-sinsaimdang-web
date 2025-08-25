@@ -60,6 +60,7 @@ const ScrapbookPage = () => {
         return;
       }
       try {
+
         const params = { page: 0, size: 10, sort: "createdAt,desc" };
         const values = selectedTags.map((t) => t.value);
         if (values.length === 1) params.tag = values[0];
@@ -67,7 +68,8 @@ const ScrapbookPage = () => {
 
         const res = await baseApi.get("/user/scraps", {
           headers: { Authorization: `Bearer ${token}` },
-          params,
+          params
+       
         });
 
         const serverList = res.data?.data?.content || [];
