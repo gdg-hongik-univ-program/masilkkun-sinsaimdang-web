@@ -59,6 +59,7 @@ export const getRoute = async (routePlaces) => {
 };
 
 const Mapview = forwardRef(({ onSelectPlace }, ref) => {
+  const routeMarkersRef = useRef([]);
   const location = useLocation();
   const isMyPage = location.pathname === "/mypage";
   const isCreatePage = location.pathname.includes("/create");
@@ -91,21 +92,30 @@ const Mapview = forwardRef(({ onSelectPlace }, ref) => {
       if (!routePlaces?.length || !window.kakao || !mapInstanceRef.current)
         return;
 
-      const firstPlace = routePlaces[0];
-      if (firstPlace) {
-        mapInstanceRef.current.setCenter(
-          new window.kakao.maps.LatLng(firstPlace.lat, firstPlace.lng)
-        );
+      // 기존 경로/마커 정리
+      if (mapInstanceRef.current.polyline) {
+        mapInstanceRef.current.polyline.setMap(null);
+        mapInstanceRef.current.polyline = null;
       }
+      routeMarkersRef.current.forEach((m) => m.setMap(null));
+      routeMarkersRef.current = [];
 
+      // 시작점 기준 센터 이동
+      const first = routePlaces[0];
+      mapInstanceRef.current.panTo(
+        new window.kakao.maps.LatLng(first.lat, first.lng)
+      );
+
+      // 요청 URL 구성
       const start = routePlaces[0];
       const end = routePlaces[routePlaces.length - 1];
-      const waypoints = routePlaces
+      const waypointsStr = routePlaces
         .slice(1, -1)
         .map((p) => `${p.lng},${p.lat}`)
         .join("|");
 
-      const url = `https://apis-navi.kakaomobility.com/v1/directions?origin=${start.lng},${start.lat}&destination=${end.lng},${end.lat}&waypoints=${waypoints}&priority=RECOMMEND&alternatives=false`;
+      let url = `https://apis-navi.kakaomobility.com/v1/directions?origin=${start.lng},${start.lat}&destination=${end.lng},${end.lat}&priority=RECOMMEND&alternatives=false`;
+      if (waypointsStr) url += `&waypoints=${encodeURIComponent(waypointsStr)}`;
 
       const xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
@@ -114,66 +124,92 @@ const Mapview = forwardRef(({ onSelectPlace }, ref) => {
         `KakaoAK ${import.meta.env.VITE_REST_API}`
       );
       xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          const data = JSON.parse(xhr.responseText);
-          if (!data.routes?.length) return;
+        if (xhr.readyState !== 4) return;
+        if (xhr.status !== 200) return;
 
-          const section = data.routes[0].sections?.[0] || data.routes[0];
+        const data = JSON.parse(xhr.responseText);
+        const route = data?.routes?.[0];
+        if (!route) return;
 
-          // guides 배열에서 좌표 추출
-          const linePath =
-            section.guides?.map(
-              (g) => new window.kakao.maps.LatLng(g.y, g.x)
-            ) || [];
-
-          if (!linePath.length) return;
-
-          if (mapInstanceRef.current.polyline) {
-            mapInstanceRef.current.polyline.setMap(null);
-          }
-
-          const polyline = new window.kakao.maps.Polyline({
-            map: mapInstanceRef.current,
-            path: linePath,
-            strokeWeight: 5,
-            strokeColor: "#FF0000",
-            strokeOpacity: 0.7,
-            strokeStyle: "solid",
+        // 🔥 자세한 경로: roads[].vertexes를 전부 이어 붙이기
+        const path = [];
+        (route.sections || []).forEach((section) => {
+          (section.roads || []).forEach((road) => {
+            const v = road.vertexes || [];
+            for (let i = 0; i < v.length; i += 2) {
+              const x = v[i],
+                y = v[i + 1];
+              path.push(new window.kakao.maps.LatLng(y, x));
+            }
           });
+        });
 
-          const bounds = new window.kakao.maps.LatLngBounds();
-          linePath.forEach((latlng) => bounds.extend(latlng));
-          mapInstanceRef.current.setBounds(bounds);
-
-          mapInstanceRef.current.polyline = polyline;
-          if (markersRef.current?.length) {
-            markersRef.current.forEach((m) => m.setMap(null));
-          }
-          // 🚀 사용자 제공 장소에만 마커 찍기
-          markersRef.current = routePlaces.map((place) => {
-            const position = new window.kakao.maps.LatLng(place.lat, place.lng);
-            const marker = new window.kakao.maps.Marker({
-              position,
-              map: mapInstanceRef.current,
-              title: place.placeName || place.name,
-            });
-
-            const infowindow = new window.kakao.maps.InfoWindow({
-              content: `<div style="padding:5px;">${
-                place.placeName || place.name
-              }</div>`,
-            });
-
-            window.kakao.maps.event.addListener(marker, "click", () => {
-              infowindow.open(mapInstanceRef.current, marker);
-            });
-
-            bounds.extend(position);
-            return marker;
+        // roads가 비어있으면 guides로 폴백
+        if (!path.length) {
+          (route.sections?.[0]?.guides || []).forEach((g) => {
+            path.push(new window.kakao.maps.LatLng(g.y, g.x));
           });
-
-          mapInstanceRef.current.setBounds(bounds);
         }
+        if (!path.length) return;
+
+        // 폴리라인 그리기
+        const polyline = new window.kakao.maps.Polyline({
+          map: mapInstanceRef.current,
+          path,
+          strokeWeight: 6,
+          strokeColor: "#ff3b30",
+          strokeOpacity: 0.9,
+          strokeStyle: "solid",
+        });
+        mapInstanceRef.current.polyline = polyline;
+
+        // 지도 범위
+        const bounds = new window.kakao.maps.LatLngBounds();
+        path.forEach((p) => bounds.extend(p));
+
+        // ✅ 사용자 제공 장소만 마커 생성
+        routeMarkersRef.current = routePlaces.map((place, idx) => {
+          const pos = new window.kakao.maps.LatLng(place.lat, place.lng);
+          const imageSrc = "/marker2.png"; // public/marker2.png 에 위치해야 함
+          const imageSize = new window.kakao.maps.Size(36, 37);
+          const imgOptions = {
+            spriteSize: new window.kakao.maps.Size(36, 691),
+            spriteOrigin: new window.kakao.maps.Point(0, idx * 46 + 10), // idx에 따라 다른 부분 보여주기
+            offset: new window.kakao.maps.Point(13, 37),
+          };
+          const markerImage = new window.kakao.maps.MarkerImage(
+            imageSrc,
+            imageSize,
+            imgOptions
+          );
+          const marker = new window.kakao.maps.Marker({
+            position: pos,
+            map: mapInstanceRef.current,
+            image: markerImage,
+            title: place.placeName || place.name || `장소 ${idx + 1}`,
+          });
+
+          const label =
+            idx === 0
+              ? "출발"
+              : idx === routePlaces.length - 1
+              ? "도착"
+              : `${idx + 1}`;
+          const info = new window.kakao.maps.InfoWindow({
+            content: `<div style="padding:6px 8px;font-size:12px;">
+                      <b>${label}</b> ${place.placeName || ""}<br/>
+                      ${place.address || ""}
+                    </div>`,
+          });
+          window.kakao.maps.event.addListener(marker, "click", () => {
+            info.open(mapInstanceRef.current, marker);
+          });
+
+          bounds.extend(pos);
+          return marker;
+        });
+
+        mapInstanceRef.current.setBounds(bounds);
       };
       xhr.send();
     },

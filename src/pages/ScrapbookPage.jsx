@@ -6,11 +6,22 @@ import baseApi from "../api/baseApi";
 import "./ScrapbookPage.css";
 
 const ScrapbookPage = () => {
-  const { selectedCategory, setSelectedCategory } = useCategory();
   const [region, setRegion] = useState("");
   const [sortOrder, setSortOrder] = useState("기본순");
   const [posts, setPosts] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
 
+  const tagMap = {
+    여행지: "TRAVEL_SPOT",
+    맛집: "RESTAURANT",
+    카페: "CAFE",
+  };
+
+  const toggleTag = (tag) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
   // 스크랩한 게시글 목록 조회
   useEffect(() => {
     const fetchScrapedPosts = async () => {
@@ -21,15 +32,6 @@ const ScrapbookPage = () => {
       }
 
       try {
-        const tagMap = {
-          여행지: "TRAVEL_SPOT",
-          맛집: "RESTAURANT",
-          카페: "CAFE",
-        };
-
-        const tagsQuery = tagMap[selectedCategory] || "";
-        console.log(`[스크랩북] ${selectedCategory} 조회 시작`);
-
         const regionMap = {
           서울: "서울특별시",
           부산: "부산광역시",
@@ -49,8 +51,14 @@ const ScrapbookPage = () => {
           경남: "경상남도",
           제주: "제주특별자치도",
         };
+
         const regionQuery = region ? regionMap[region] : undefined;
         // API 엔드포인트 수정 시도
+        const tagsQuery =
+          selectedTags.length > 0
+            ? selectedTags.map((t) => tagMap[t]).join(",")
+            : undefined;
+
         const res = await baseApi.get("user/scraps", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -58,15 +66,14 @@ const ScrapbookPage = () => {
           params: {
             page: 0,
             size: 10,
-            sort: "createdAt,desc",
-            ...(tagsQuery && { tag: tagsQuery }), // tag가 있을 때만 추가
+            sort:
+              sortOrder === "좋아요순" ? "likeCount,desc" : "createdAt,desc",
+            ...(tagsQuery && { tags: tagsQuery }),
+            ...(regionQuery && { region: regionQuery }), // tag가 있을 때만 추가
           },
         });
 
         const postsData = res.data.data?.content || [];
-        console.log(
-          `[스크랩북] ${selectedCategory} 조회 완료: ${postsData.length}개`
-        );
 
         setPosts(postsData);
       } catch (err) {
@@ -79,7 +86,7 @@ const ScrapbookPage = () => {
     };
 
     fetchScrapedPosts();
-  }, [selectedCategory]);
+  }, [selectedTags, region, sortOrder]);
 
   // 스크랩 추가/취소 함수
   const handleScrapToggle = async (articleId, isCurrentlyScraped) => {
@@ -140,7 +147,7 @@ const ScrapbookPage = () => {
       </div>
 
       <div className="top-bar">
-        <Region />
+        <Region region={region} setRegion={setRegion} />
       </div>
 
       <div className="filter-bar">
@@ -149,9 +156,9 @@ const ScrapbookPage = () => {
             <button
               key={cat}
               className={`category-btn ${
-                selectedCategory === cat ? "active" : ""
+                selectedTags.includes(cat) ? "active" : ""
               }`}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => toggleTag(cat)}
             >
               {cat}
             </button>
@@ -171,7 +178,7 @@ const ScrapbookPage = () => {
       <PostList
         posts={posts}
         region={region}
-        category={selectedCategory}
+        categories={selectedTags}
         sortOrder={sortOrder}
         isScrapMode={true}
         onScrapToggle={handleScrapToggle}
